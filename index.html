@@ -134,6 +134,8 @@ button{cursor:pointer}
 .cfm{display:grid;gap:8px;margin-top:12px;padding:14px;border-radius:16px;background:var(--card);box-shadow:var(--neo);text-align:center}
 .cfm span{color:var(--muted);font-size:13px;line-height:1.35}
 .act2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.seg.s3{grid-template-columns:repeat(3,1fr)}
+.seg.s3 .segb{padding-inline:6px;font-size:14px}
 .hwrap{padding-block:12px 4px;flex:none}
 .hbox{width:100%;background:var(--card);color:var(--ink);border-radius:20px;box-shadow:var(--neo);padding:10px 14px 10px}
 .hco{display:flex;align-items:center;justify-content:center;gap:10px;font:700 17px var(--display);text-align:center}
@@ -366,7 +368,7 @@ function dkeyD(dt){return dkey(dt.getFullYear(),dt.getMonth(),dt.getDate());}
 var TODAY=dkey(TY,TM,TD);
 
 function mk(n,name,cat,sal,ot,bonus,sun){
-  return {fid:randId(),createdAt:Date.now(),id:'EMP'+String(n).padStart(3,'0'),name:name,cur:{salary:sal,ot:ot,bonus:bonus,cat:cat},prev:null,next:null,sunPaid:sun!==false,log:[]};
+  return {fid:randId(),createdAt:Date.now(),id:'EMP'+String(n).padStart(3,'0'),name:name,cur:{salary:sal,ot:ot,bonus:bonus,cat:cat,otx:'1',sunw:'duty'},prev:null,next:null,sunPaid:sun!==false,log:[]};
 }
 /* older saved data kept punches per date in minutes; convert to exact timestamps */
 function migrate(e){
@@ -383,7 +385,7 @@ function migrate(e){
 var KEY='payroll-demo-v2';
 var S={
   screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],role:null,dh:null,confirmDel:false,
-  tab:'home',sub:null,aprof:false,q:'',rm:TM,ry:TY,etab:'home',cam:null,meId:null,camId:0,form:{sun:'y',apply:'cur'}
+  tab:'home',sub:null,aprof:false,q:'',rm:TM,ry:TY,etab:'home',cam:null,meId:null,camId:0,form:{sun:'y',apply:'cur',otx:'1',sunw:'duty'}
 };
 function save(){}   /* data now lives in Firebase; Firestore keeps its own offline copy */
 function me(){return byId(S.meId);}
@@ -425,7 +427,7 @@ function dutiesOf(e){
     var ot=(!stale&&(open||lo!=null))?Math.max(0,w-(FULL+BREAK)):0;
     if(ot<10)ot=0;
     if(stale)w=Math.max(w,FULL);
-    return {key:dkeyD(new Date(f.i)),inMs:f.i,outMs:(open||stale)?null:lo,w:w,open:open,ot:ot};
+    return {key:dkeyD(new Date(f.i)),inMs:f.i,outMs:(open||stale)?null:lo,w:w,open:open,ot:ot,stale:stale};
   });
 }
 function isActive(e){var l=e.log[e.log.length-1];return !!(l&&l.o==null&&Date.now()-l.i<DAYMS);}
@@ -451,13 +453,22 @@ function monthData(e,y,m){
   if(!ds.length)return out;                      /* not started yet: no leave, no bonus */
   var by={};ds.forEach(function(u){by[u.key]=u;});
   var startKey=ds[0].key,last=c===0?rD:new Date(y,m+1,0).getDate(),list=[],otTotal=0;
+  var rt=ratesFor(e,y,m),sunOT=(rt.sunw==='ot');
+  /* a Sunday is paid by the company only when the day before it was worked (so Sundays missed before joining or inside a leave stretch are not paid) */
+  function worked(k){var q=by[k];return !!q&&(q.open||q.w>=HALF);}
+  function dayBefore(yy,mm,dd){return dkeyD(new Date(yy,mm,dd-1));}
   for(var d=1;d<=last;d++){
     var key=dkey(y,m,d);
     if(key<startKey)continue;
     if(!by[key]&&gapped(e,key))continue;                /* days while the employee was deleted do not count */
     var isSun=new Date(y,m,d).getDay()===0,isToday=c===0&&d===rD,u=by[key],row=null;
-    if(u){row={d:d,key:key,inMs:u.inMs,outMs:u.outMs,w:u.w,open:u.open,ot:u.ot};otTotal+=u.ot;}
-    else if(isSun){if(e.sunPaid)row={d:d,holiday:true};}
+    var paidSun=isSun&&!!e.sunPaid&&worked(dayBefore(y,m,d));
+    if(u){
+      row={d:d,key:key,inMs:u.inMs,outMs:u.outMs,w:u.w,open:u.open,ot:u.ot};
+      if(isSun){row.sun=true;row.paidSun=paidSun;if(sunOT){row.sunOT=true;row.ot=u.stale?0:u.w;}}   /* Sunday work as OT: every hour is OT */
+      otTotal+=row.ot;
+    }
+    else if(isSun){if(paidSun)row={d:d,holiday:true};}
     else if(!isToday){row={d:d,leave:true};}     /* a day counts as leave only after it has fully passed */
     if(row)list.push(row);
   }
@@ -465,6 +476,13 @@ function monthData(e,y,m){
   list.forEach(function(r){
     if(r.holiday){working+=1;return;}
     if(r.leave){leave+=1;return;}
+    if(r.sun){
+      if(r.paidSun){working+=1;return;}                         /* paid Sunday: one day, whatever was worked */
+      if(r.sunOT)return;                                        /* unpaid Sunday worked as OT: only the OT counts */
+      if(r.open){if(r.w>=FULL)working+=1;return;}
+      if(r.w>=FULL)working+=1;else if(r.w>=HALF){working+=0.5;r.half=true;}
+      return;                                                   /* a short Sunday is never a leave */
+    }
     if(r.open){if(r.w>=FULL)working+=1;return;}   /* a running duty counts only after its 8 h are complete */
     if(r.w>=FULL){working+=1;return;}
     if(r.w>=HALF){
@@ -475,6 +493,19 @@ function monthData(e,y,m){
     }
     leave+=1;r.shortLeave=true;
   });
+  /* Sundays still to come this month are added now, as long as the employee is working at present */
+  var futureSun=0;
+  if(c===0&&e.sunPaid&&!e.delAt){
+    var dim=new Date(y,m+1,0).getDate(),standing=false;
+    for(var i=0;i<10;i++){
+      var dt=new Date(y,m,rD-i);if(dt.getDay()===0)continue;
+      var kk=dkeyD(dt);if(i===0&&!by[kk])continue;
+      standing=worked(kk);break;
+    }
+    if(standing)for(var dd=rD+1;dd<=dim;dd++)if(new Date(y,m,dd).getDay()===0)futureSun++;
+  }
+  working+=futureSun;
+  out.futureSun=futureSun;
   out.rows=list.slice().reverse();out.working=working;out.leave=leave;out.otMin=pool;
   out.full=c<0&&startKey<=dkey(y,m,1)&&leave===0&&list.length>0;
   return out;
@@ -482,7 +513,7 @@ function monthData(e,y,m){
 function calc(e,y,m){
   var dta=monthData(e,y,m),r=ratesFor(e,y,m),per=Math.round(r.salary/30);
   var otH=Math.round(dta.otMin/6)/10;
-  var work=Math.round(dta.working*per),otAmt=otH*r.ot,added=dta.full?r.bonus:0;
+  var work=Math.round(dta.working*per),otAmt=Math.round(otH*r.ot*(parseFloat(r.otx)||1)),added=dta.full?r.bonus:0;
   return {d:dta,r:r,per:per,work:work,otAmt:otAmt,bonus:r.bonus,added:added,total:work+otAmt+added,otH:otH};
 }
 function otText(min){if(!min)return '—';var h=Math.floor(min/60),m=min%60;return h?(m?h+' h '+m+' m':h+' h'):m+' min';}
@@ -556,7 +587,7 @@ function catSelect(id,val){
   return '<div class="field"><label for="'+id+'">Category</label><select class="inp" id="'+id+'">'+CATS.map(function(c){return '<option'+(c===val?' selected':'')+'>'+c+'</option>';}).join('')+'</select></div>';
 }
 function segHTML(g,label,opts,cur){
-  return '<div class="seg" role="radiogroup" aria-label="'+label+'">'+opts.map(function(o){
+  return '<div class="seg'+(opts.length===3?' s3':'')+'" role="radiogroup" aria-label="'+label+'">'+opts.map(function(o){
     return '<button type="button" class="segb" role="radio" aria-checked="'+(o[0]===cur)+'" data-act="seg" data-g="'+g+'" data-v="'+o[0]+'">'+o[1]+'</button>';
   }).join('')+'</div>';
 }
@@ -864,6 +895,8 @@ VIEWS.admin=function(){
        '<div class="field"><label for="f-bonus">Attendance Bonus <i>(Optional)</i></label><input class="inp" id="f-bonus" type="number" inputmode="numeric" min="0" enterkeyhint="done"></div>'+
        '<div class="field"><span class="lab">Sunday Holiday from Company</span>'+segHTML('sun','Sunday Holiday from Company',[['y','Yes'],['n','No']],S.form.sun)+
        '<span class="hint">If Yes, a Sunday without attendance adds one day’s salary automatically.</span></div>'+
+       '<div class="field"><span class="lab">OT Pay Rate</span>'+segHTML('otx','OT Pay Rate',[['1','Single'],['1.5','1.5×'],['2','Double']],S.form.otx)+'<span class="hint">What each OT hour pays: Single = the OT rate, 1.5× or Double.</span></div>'+
+       '<div class="field"><span class="lab">Work on Sunday</span>'+segHTML('sunw','Work on Sunday',[['duty','Counts as Duty'],['ot','Counts as OT']],S.form.sunw)+'<span class="hint">If OT, every hour worked on a Sunday is paid as OT.</span></div>'+
        '<button class="btn" data-act="add-save">Save</button></div>';
     }
   }else if(S.tab==='reports'){
@@ -878,6 +911,8 @@ VIEWS.admin=function(){
        field('u-ot','OT Rate','number',e.cur.ot,'inputmode="numeric" min="0" enterkeyhint="next"')+
        field('u-bonus','Attendance Bonus','number',e.cur.bonus,'inputmode="numeric" min="0" enterkeyhint="done"')+
        catSelect('u-cat',e.cur.cat)+
+       '<div class="field"><span class="lab">OT Pay Rate</span>'+segHTML('otx','OT Pay Rate',[['1','Single'],['1.5','1.5×'],['2','Double']],S.form.otx)+'<span class="hint">What each OT hour pays: Single = the OT rate, 1.5× or Double.</span></div>'+
+       '<div class="field"><span class="lab">Work on Sunday</span>'+segHTML('sunw','Work on Sunday',[['duty','Counts as Duty'],['ot','Counts as OT']],S.form.sunw)+'<span class="hint">If OT, every hour worked on a Sunday is paid as OT.</span></div>'+
        '<div class="field"><span class="lab">Apply From</span>'+segHTML('apply','Apply From',[['cur','Current Month'],['next','Next Month']],S.form.apply)+'</div>'+
        '<button class="btn" data-act="upd-save">Update</button></div>';
     }
@@ -1006,19 +1041,19 @@ root.addEventListener('click',function(ev){
       S.emps=S.emps.filter(function(x){return x!==de2;});
       S.confirmDel=false;msg='Employee deleted · saved in Delete History';break;
     case 'total':case 'active':case 'leave':S.sub={t:a};break;
-    case 'add':S.form.sun='y';S.sub={t:'add'};break;
+    case 'add':S.form.sun='y';S.form.otx='1';S.form.sunw='duty';S.sub={t:'add'};break;
     case 'back':S.sub=null;S.confirmDel=false;break;
     case 'noop':return;
-    case 'pick':S.confirmDel=false;S.form.apply='cur';S.sub={t:S.tab,id:id};S.rm=TM;S.ry=TY;break;
+    case 'pick':S.confirmDel=false;S.form.apply='cur';(function(x){S.form.otx=(x&&x.cur.otx)||'1';S.form.sunw=(x&&x.cur.sunw)||'duty';})(byId(id));S.sub={t:S.tab,id:id};S.rm=TM;S.ry=TY;break;
     case 'logout':doLogout();return;
     case 'add-save':
       var nm=val('f-name');
       if(!nm){toast('Enter the employee name');return;}
       if(!num('f-sal')){toast('Enter the monthly salary');return;}
-      var nn=nextNumber();S.nextNum=nn+1;var ne=mk(nn,nm,val('f-cat'),num('f-sal'),num('f-ot'),num('f-bonus'),S.form.sun!=='n');
+      var nn=nextNumber();S.nextNum=nn+1;var ne=mk(nn,nm,val('f-cat'),num('f-sal'),num('f-ot'),num('f-bonus'),S.form.sun!=='n');ne.cur.otx=S.form.otx;ne.cur.sunw=S.form.sunw;
       S.emps.push(ne);saveEmp(ne);saveCompany();S.sub={t:'qrnew',id:ne.id};msg='Employee added · '+ne.id;break;
     case 'upd-save':
-      var e2=byId(S.sub.id),nv={salary:num('u-sal'),ot:num('u-ot'),bonus:num('u-bonus'),cat:val('u-cat')};
+      var e2=byId(S.sub.id),nv={salary:num('u-sal'),ot:num('u-ot'),bonus:num('u-bonus'),cat:val('u-cat'),otx:S.form.otx,sunw:S.form.sunw};
       if(S.form.apply==='next'){e2.next=nv;msg='Changes apply from next month';}
       else{e2.prev=e2.prev||JSON.parse(JSON.stringify(e2.cur));e2.cur=nv;msg='Changes apply from this month';}
       saveEmp(e2);S.sub=null;break;
@@ -1064,6 +1099,7 @@ root.addEventListener('change',function(ev){
     fr.readAsDataURL(t.files[0]);
   }
 });
+if(window.__TEST)window.__t={calc:calc,monthData:monthData};
 boot();
 })();
 </script>
