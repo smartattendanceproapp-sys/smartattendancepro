@@ -472,13 +472,7 @@ function monthData(e,y,m){
   if(!ds.length)return out;                      /* not started yet: no leave, no bonus */
   var by={};ds.forEach(function(u){by[u.key]=u;});
   var startKey=ds[0].key,last=c===0?rD:new Date(y,m+1,0).getDate(),list=[],otTotal=0;
-  var rt=ratesFor(e,y,m),sunOT=(rt.sunw==='ot'),leadKey=null;
-  /* an employee already working when added: the Sunday just before the first punch is paid too */
-  if(e.starter!=='new'&&e.sunPaid){
-    var fd=new Date(ds[0].inMs),pd=new Date(fd.getFullYear(),fd.getMonth(),fd.getDate()-1);
-    if(pd.getDay()===0){leadKey=dkeyD(pd);startKey=leadKey;}
-  }
-  /* a Sunday is paid by the company only when the day before it was worked (so Sundays missed before joining or inside a leave stretch are not paid) */
+  var rt=ratesFor(e,y,m),sunOT=(rt.sunw==='ot');
   function worked(k){var q=by[k];return !!q&&(q.open||q.w>=HALF);}
   function dayBefore(yy,mm,dd){return dkeyD(new Date(yy,mm,dd-1));}
   for(var d=1;d<=last;d++){
@@ -486,13 +480,13 @@ function monthData(e,y,m){
     if(key<startKey)continue;
     if(!by[key]&&gapped(e,key))continue;                /* days while the employee was deleted do not count */
     var isSun=new Date(y,m,d).getDay()===0,isToday=c===0&&d===rD,u=by[key],row=null;
-    var paidSun=isSun&&!!e.sunPaid&&(worked(dayBefore(y,m,d))||key===leadKey);
+    var paidSun=isSun&&!!e.sunPaid&&worked(dayBefore(y,m,d));
     if(u){
       row={d:d,key:key,inMs:u.inMs,outMs:u.outMs,w:u.w,open:u.open,ot:u.ot};
       if(isSun){row.sun=true;row.paidSun=paidSun;if(sunOT){row.sunOT=true;row.ot=u.stale?0:u.w;}}   /* Sunday work as OT: every hour is OT */
       otTotal+=row.ot;
     }
-    else if(isSun){if(paidSun)row={d:d,holiday:true};}
+    else if(isSun){if(paidSun)row={d:d,holiday:true};else if(e.sunPaid&&!isToday)row={d:d,leave:true};}   /* a Sunday inside a stretch of absence is listed as leave and not paid */
     else if(!isToday){row={d:d,leave:true};}     /* a day counts as leave only after it has fully passed */
     if(row)list.push(row);
   }
@@ -920,7 +914,6 @@ VIEWS.admin=function(){
      '<input class="sr" id="logo2" type="file" accept="image/*"><b>'+esc(S.company)+'</b><span>'+esc(S.gmail)+'</span>'+
      '</div>'+
      '<div class="prow">'+ic('globe',20)+'<b>Language</b><span class="v">English</span></div>'+
-     '<button class="prow" data-act="soon">'+ic('help',20)+'<b>Help &amp; Support</b></button>'+
      '<button class="prow" data-act="cfg-open">'+ic('clock',20)+'<b>Duty Settings</b></button>'+
      '<button class="prow" data-act="dh-open">'+ic('trash',20)+'<b>Delete Employee History</b></button>'+
      '<button class="prow out" data-act="logout">'+ic('logout',20)+'<b>Logout</b></button></div>';
@@ -946,7 +939,6 @@ VIEWS.admin=function(){
        '<span class="hint">If Yes, a Sunday without attendance adds one day’s salary automatically.</span></div>'+
        '<div class="field"><span class="lab">OT Pay Rate</span>'+segHTML('otx','OT Pay Rate',[['1','Single'],['1.5','1.5×'],['2','Double']],S.form.otx)+'<span class="hint">What each OT hour pays: Single = the OT rate, 1.5× or Double.</span></div>'+
        '<div class="field"><span class="lab">Work on Sunday</span>'+segHTML('sunw','Work on Sunday',[['duty','Counts as Duty'],['ot','Counts as OT']],S.form.sunw)+'<span class="hint">If OT, every hour worked on a Sunday is paid as OT.</span></div>'+
-       '<div class="field"><span class="lab">Employee</span>'+segHTML('starter','Employee',[['old','Already Working'],['new','New Joining']],S.form.starter)+'<span class="hint">Already working: a Sunday just before the first punch is also paid. New joining: it is not.</span></div>'+
        '<button class="btn" data-act="add-save">Save</button></div>';
     }
   }else if(S.tab==='reports'){
