@@ -135,9 +135,7 @@ button{cursor:pointer}
 .qrcam .br{right:18%;bottom:18%;border-left:0;border-top:0;border-radius:0 0 10px 0}
 .qrmsg{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:12px;font-weight:600;color:var(--cam-ink);padding:0 12px}
 .qrcard{break-inside:avoid}
-@media print{body:not(.pdoc-on) *{visibility:hidden!important}body:not(.pdoc-on) .qrcard,body:not(.pdoc-on) .qrcard *{visibility:visible!important}.qrcard{position:fixed;left:0;right:0;top:20px;margin:0 auto;box-shadow:none}
-body.pdoc-on #app{display:none}body.pdoc-on #pdoc{display:block;padding:18px;font:13px Arial,sans-serif;color:#000;background:#fff}
-#pdoc h2{margin:0 0 4px;font-size:20px}#pdoc h3{margin:0 0 12px;font-size:15px;font-weight:600}#pdoc table{border-collapse:collapse;width:100%}#pdoc td,#pdoc th{border:1px solid #888;padding:4px 6px;text-align:left}#pdoc th{background:#e6e6e6}}
+@media print{body *{visibility:hidden!important}.qrcard,.qrcard *{visibility:visible!important}.qrcard{position:fixed;left:0;right:0;top:20px;margin:0 auto;box-shadow:none}}
 .dlg{position:absolute;inset:0;z-index:30;display:grid;place-items:center;padding:24px;background:rgba(10,20,50,.5)}
 .dlg .cfm{width:100%;max-width:340px;margin:0}
 .dbtn{color:var(--bad)!important;justify-self:center}
@@ -251,7 +249,7 @@ select.inp,.sel{appearance:none;-webkit-appearance:none;text-align-last:center;p
 
 /* report: fixed top half, scrolling bottom half */
 .rep{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding-block:12px;overflow:auto}
-.rbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center}.rbar.ex{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr) 36px 36px;gap:8px}.rbar.ex .iconbtn{width:36px;height:36px}
+.rbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center}.rbar.ex{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr) 40px;gap:8px}.rbar.ex .iconbtn{width:40px;height:40px}
 .rbar .inp{height:42px;font-weight:600}
 .histwrap{flex:1 1 0;min-height:190px;display:flex}
 .hist{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--card);border:1px solid transparent;border-radius:16px;box-shadow:var(--neo)}
@@ -321,7 +319,6 @@ select.inp,.sel{appearance:none;-webkit-appearance:none;text-align-last:center;p
 .devrow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:13px;font-weight:600}.devrow .btn{min-height:36px;width:auto;font-size:13px}.devrow .ic{color:var(--accent)}
 textarea.inp{height:140px;padding:12px 14px;text-align:left;resize:none;font-family:inherit}
 a.prow{color:inherit;text-decoration:none}
-#pdoc{display:none}
 #offb{position:fixed;top:0;left:0;right:0;z-index:50;background:#8F5600;color:#fff;text-align:center;font:600 12px var(--body);padding:5px 10px}
 .toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));margin-inline:auto;max-width:420px;z-index:30;background:var(--ink);color:var(--frame);padding:11px 16px;border-radius:14px;font-weight:600;text-align:center}
 </style>
@@ -565,7 +562,7 @@ function selectsHTML(ex){
   var mo=MONTHS.map(function(n,i){return '<option value="'+i+'"'+(i===S.rm?' selected':'')+'>'+n+'</option>';}).join('');
   var yo=[TY-1,TY].map(function(y){return '<option value="'+y+'"'+(y===S.ry?' selected':'')+'>'+y+'</option>';}).join('');
   return '<div class="rbar gut'+(ex?' ex':'')+'"><span class="selw">'+ic('calendar',16)+'<select id="rm" class="inp sel" aria-label="Month">'+mo+'</select></span><span class="selw">'+ic('calendar',16)+'<select id="ry" class="inp sel" aria-label="Year">'+yo+'</select></span>'+
-   (ex?'<button class="iconbtn" data-act="'+ex+'-csv" aria-label="Download Excel (CSV)">'+ic('download',20)+'</button><button class="iconbtn" data-act="'+ex+'-pdf" aria-label="Save as PDF or print">'+ic('print',20)+'</button>':'')+'</div>';
+   (ex?'<button class="iconbtn" data-act="'+ex+'-pdf" aria-label="Download PDF">'+ic('download',20)+'</button>':'')+'</div>';
 }
 function historyHTML(e){
   var rows=monthData(e,S.ry,S.rm).rows;
@@ -651,14 +648,7 @@ function qrAction(w,e){
   });
 }
 /* ---------- reports: Excel (CSV), PDF (print), backup ---------- */
-function dlFile(name,mime,text){
-  var blob=new Blob([text],{type:mime}),a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
-  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
-}
-function csvq(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
-function csvText(rows){return '\ufeff'+rows.map(function(r){return r.map(csvq).join(',');}).join('\r\n');}
-function fname(t){return String(t).replace(/[^\w-]+/g,'_');}
+function fname(t){return String(t).replace(/[^\w\u0900-\u097F-]+/g,'_');}
 function ml(){return MONTHS[S.rm]+' '+S.ry;}
 function dayCell(x){
   if(x.leave)return ['Leave','',''];
@@ -668,9 +658,9 @@ function dayCell(x){
   return [clockMs(x.inMs)+(x.half?'  (half day)':''),o,otText(x.ot)];
 }
 function allRowsData(){
-  var tot=0,rows=[['ID','Name','Category','Working Days','Leave Days','OT Hours','Work Amount','OT Amount','Attendance Bonus','Total Salary']];
+  var tot=0,rows=[['ID','Name','Category','Working','Leave','OT Hrs','Work Amt','OT Amt','Bonus','Total']];
   S.emps.forEach(function(e){var c=calc(e,S.ry,S.rm);tot+=c.total;rows.push([e.id,e.name,e.cur.cat,nf(c.d.working),nf(c.d.leave),nf(c.otH),c.work,c.otAmt,c.added,c.total]);});
-  rows.push(['','','','','','','','','Grand Total',tot]);
+  rows.push(['','Grand Total','','','','','','','',tot]);
   return rows;
 }
 function oneRowsData(e){
@@ -680,26 +670,71 @@ function oneRowsData(e){
   c.d.rows.forEach(function(x){var d=dayCell(x);rows.push([p2(x.d)+'-'+p2(S.rm+1)+'-'+S.ry,d[0],d[1],d[2]]);});
   return rows;
 }
-function tableHTML(rows,head){
-  return '<table>'+rows.map(function(r,i){var t=(i===0&&head)?'th':'td';return '<tr>'+r.map(function(c){return '<'+t+'>'+esc(c)+'</'+t+'>';}).join('')+'</tr>';}).join('')+'</table>';
+function pdfDoc(o){
+  var W=o.land?1754:1240,H=o.land?1240:1754,M=70,RH=52,pages=[],cv,x,y;
+  function newPage(){cv=document.createElement('canvas');cv.width=W;cv.height=H;x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);pages.push(cv);y=M;}
+  function fit(t,w){t=String(t);if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…';}
+  newPage();
+  x.fillStyle='#1456C8';x.fillRect(M,y,W-2*M,8);y+=30;
+  x.fillStyle='#0E1A33';x.font='700 40px sans-serif';x.fillText(o.title,M,y+36);y+=70;
+  o.blocks.forEach(function(b){
+    var tw=W-2*M,cx=[0];b.cols.forEach(function(f,i){cx.push(cx[i]+f*tw);});
+    var al=b.align||[];
+    function drawRow(r,head,bold,n){
+      if(head){x.fillStyle='#1456C8';x.fillRect(M,y,tw,RH);}
+      else if(b.labelCol){x.fillStyle='#EAF1FC';x.fillRect(M,y,cx[1],RH);}
+      else if(n%2===1){x.fillStyle='#F3F7FD';x.fillRect(M,y,tw,RH);}
+      if(bold){x.fillStyle='#DCE8FA';x.fillRect(M,y,tw,RH);}
+      x.strokeStyle='#9FB4D6';x.lineWidth=1.5;x.strokeRect(M,y,tw,RH);
+      r.forEach(function(c,i){
+        var t=String(c==null?'':c),w=cx[i+1]-cx[i]-28,a=al[i]||'l';
+        x.font=((head||bold||(b.labelCol&&i===0))?'700':'500')+' 25px sans-serif';
+        x.fillStyle=head?'#FFFFFF':'#0E1A33';
+        t=fit(t,w);x.textAlign=a==='r'?'right':(a==='c'?'center':'left');
+        x.fillText(t,a==='r'?M+cx[i+1]-14:(a==='c'?M+(cx[i]+cx[i+1])/2:M+cx[i]+14),y+RH-16);
+        if(i>0){x.beginPath();x.moveTo(M+cx[i],y);x.lineTo(M+cx[i],y+RH);x.stroke();}
+      });
+      x.textAlign='left';y+=RH;
+    }
+    b.rows.forEach(function(r,i){
+      if(y+RH>H-M){newPage();if(b.head&&i>0)drawRow(b.rows[0],true,false,0);}
+      drawRow(r,b.head&&i===0,b.boldLast&&i===b.rows.length-1,i);
+    });
+    y+=40;
+  });
+  return makePdf(pages.map(function(c){var u=atob(c.toDataURL('image/jpeg',0.92).split(',')[1]),a=new Uint8Array(u.length);for(var i=0;i<u.length;i++)a[i]=u.charCodeAt(i);return a;}),W,H,o.land);
 }
-function printDoc(html){
-  var d=document.getElementById('pdoc');if(d)d.remove();
-  d=document.createElement('div');d.id='pdoc';d.innerHTML=html;document.body.appendChild(d);document.body.classList.add('pdoc-on');
-  function done(){document.body.classList.remove('pdoc-on');var x=document.getElementById('pdoc');if(x)x.remove();window.removeEventListener('afterprint',done);}
-  window.addEventListener('afterprint',done);
-  setTimeout(function(){window.print();},60);
+/* tiny PDF writer: every page is one JPEG picture of the report */
+function makePdf(jpgs,W,H,land){
+  var parts=[],off=0,xr=[],pw=land?842:595,ph=land?595:842,n=jpgs.length,enc=new TextEncoder();
+  function add(v){var b=typeof v==='string'?enc.encode(v):v;parts.push(b);off+=b.length;}
+  function obj(id,body){xr[id]=off;add(id+' 0 obj\n'+body+'\nendobj\n');}
+  add('%PDF-1.4\n');
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  var kids=[],k;for(k=0;k<n;k++)kids.push((3+3*k)+' 0 R');
+  obj(2,'<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+n+' >>');
+  for(k=0;k<n;k++){
+    var pg=3+3*k,ct=pg+1,im=pg+2,cs='q '+pw+' 0 0 '+ph+' 0 0 cm /Im0 Do Q';
+    obj(pg,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pw+' '+ph+'] /Resources << /XObject << /Im0 '+im+' 0 R >> >> /Contents '+ct+' 0 R >>');
+    obj(ct,'<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream');
+    xr[im]=off;add(im+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpgs[k].length+' >>\nstream\n');add(jpgs[k]);add('\nendstream\nendobj\n');
+  }
+  var N=3+3*n,st=off,t='xref\n0 '+N+'\n0000000000 65535 f \n';
+  for(k=1;k<N;k++)t+=('0000000000'+xr[k]).slice(-10)+' 00000 n \n';
+  add(t+'trailer\n<< /Size '+N+' /Root 1 0 R >>\nstartxref\n'+st+'\n%%EOF');
+  return new Blob(parts,{type:'application/pdf'});
+}
+function dlBlob(name,blob){
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
 }
 function doExport(kind,e){
-  if(kind==='all-csv')dlFile('Salary-'+fname(ml())+'.csv','text/csv;charset=utf-8',csvText(allRowsData()));
-  else if(kind==='all-pdf')printDoc('<h2>'+esc(S.company)+'</h2><h3>Salary Report · '+ml()+'</h3>'+tableHTML(allRowsData(),true));
-  else if(kind==='one-csv'&&e)dlFile(fname(e.name+'-'+e.id)+'-'+fname(ml())+'.csv','text/csv;charset=utf-8',csvText(oneRowsData(e)));
-  else if(kind==='one-pdf'&&e){var r=oneRowsData(e);printDoc('<h2>'+esc(S.company)+'</h2><h3>'+esc(e.name)+' ('+e.id+') · '+ml()+'</h3>'+tableHTML(r.slice(3,12))+'<br>'+tableHTML(r.slice(13),true));}
-}
-function doBackup(){
-  var out={app:'Smart Attendance Pro',exportedAt:new Date().toISOString(),company:{name:S.company,nextNum:S.nextNum,duty:S.cfg},employees:S.emps.concat(S.deleted).map(function(e){
-    var o=empDoc(e);o.punches=(e.log||[]).map(function(x){return {in:x.i,out:x.o};});return o;})};
-  dlFile('Backup-'+fname(S.company||'company')+'-'+dkeyD(new Date())+'.json','application/json',JSON.stringify(out,null,1));
+  if(kind==='all-pdf'){
+    dlBlob('Salary-'+fname(ml())+'.pdf',pdfDoc({land:true,title:'Salary Report',blocks:[{labelCol:true,cols:[.2,.8],rows:[['Company Name',S.company],['Month',ml()],['Employees',S.emps.length]]},{rows:allRowsData(),cols:[.08,.17,.11,.08,.08,.08,.1,.1,.1,.1],head:true,boldLast:true,align:['l','l','l','c','c','c','r','r','r','r']}]}));
+  }else if(kind==='one-pdf'&&e){
+    var r=oneRowsData(e);
+    dlBlob(fname(e.name+'-'+e.id)+'-'+fname(ml())+'.pdf',pdfDoc({title:'Employee Salary Report',blocks:[{labelCol:true,cols:[.3,.7],rows:[['Company Name',S.company],['Employee Name',e.name],['Employee ID',e.id],['Month',ml()]]},{rows:r.slice(3,12),cols:[.6,.4],boldLast:true,align:['l','r']},{rows:r.slice(13),cols:[.28,.28,.28,.16],head:true,align:['l','c','c','c']}]}));
+  }
 }
 /* erase everything this admin stored: punches, employees, company, then the sign-in itself */
 function wipeAccount(){
@@ -1012,7 +1047,6 @@ VIEWS.admin=function(){
      '<div class="prow">'+ic('globe',20)+'<b>Language</b><span class="v">English</span></div>'+
      '<button class="prow" data-act="cfg-open">'+ic('clock',20)+'<b>Duty Settings</b></button>'+
      '<button class="prow" data-act="dh-open">'+ic('trash',20)+'<b>Delete Employee History</b></button>'+
-     '<button class="prow" data-act="bk-do">'+ic('download',20)+'<b>Backup Data</b></button>'+
      '<button class="prow" data-act="fb-open">'+ic('edit',20)+'<b>Send Feedback</b></button>'+
      '<a class="prow" href="privacy.html" target="_blank" rel="noopener">'+ic('shield',20)+'<b>Privacy Policy</b></a>'+
      '<button class="prow out" data-act="acct-ask">'+ic('trash',20)+'<b>Delete Account &amp; Data</b></button>'+
@@ -1205,9 +1239,8 @@ root.addEventListener('click',function(ev){
       if(S.form.apply==='next'){e2.next=nv;msg='Changes apply from next month';}
       else{e2.prev=e2.prev||JSON.parse(JSON.stringify(e2.cur));e2.cur=nv;msg='Changes apply from this month';}
       saveEmp(e2);S.sub=null;break;
-    case 'one-csv':case 'one-pdf':doExport(a,S.role==='emp'?me():byId(S.sub&&S.sub.id));return;
-    case 'all-csv':case 'all-pdf':doExport(a);return;
-    case 'bk-do':doBackup();msg='Backup saved to your phone';break;
+    case 'one-pdf':doExport(a,S.role==='emp'?me():byId(S.sub&&S.sub.id));return;
+    case 'all-pdf':doExport(a);return;
     case 'fb-open':S.fbOpen=true;break;
     case 'fb-back':S.fbOpen=false;break;
     case 'fb-send':
