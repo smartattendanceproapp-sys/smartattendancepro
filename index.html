@@ -677,13 +677,16 @@ function pdfEmployees(list){
     ctext(label,px+w/2,py+5,'800 19px sans-serif','#000');
   }
   var RH=31,cols=[.28,.24,.24,.24],cx=[0];cols.forEach(function(f,i){cx.push(cx[i]+f*TW);});
-  list.forEach(function(e){
+  function isEd(s){return s.oi!=null||s.oo!=null;}
+  function editedKeys(e){return dutiesOf(e).filter(function(u){return u.ss.some(isEd);}).map(function(u){return u.key;});}
+  function inMonth(k){return k.slice(0,7)===S.ry+'-'+p2(S.rm+1);}
+  function drawEmp(e,tag,flag){
     var c=calc(e,S.ry,S.rm);
     newPage();
     rr(M,y,TW,150,26,'#0F47B5');
     ctext(fit(S.company,TW-60),W/2,y+52,'700 40px sans-serif','#fff');
     ctext(fit(e.name+'  ·  '+e.id,TW-60),W/2,y+94,'600 30px sans-serif','#fff');
-    ctext(ml(),W/2,y+130,'500 24px sans-serif','#C9DBF9');
+    ctext(ml()+(tag?'  ·  '+tag:''),W/2,y+130,'500 24px sans-serif','#C9DBF9');
     y+=150+40;
     var h=76,step=h+34,w2=(TW-G)/2,w3=(TW-2*G)/3;
     tile(M,y,w2,h,'Monthly Salary (Fixed)',fmt(c.r.salary));tile(M+w2+G,y,w2,h,'OT Rate (Fixed)',fmt(c.r.ot)+'/hr');y+=step;
@@ -705,20 +708,30 @@ function pdfEmployees(list){
       if(r.leave){mid='Leave';bg='#FFDDA8';col='#8F5600';}
       else if(r.shortLeave){mid='Leave · '+hm(r.w);bg='#FFDDA8';col='#8F5600';}
       else if(r.holiday){mid='Holiday'+(r.hname?' \u00b7 '+r.hname.slice(0,22):'');bg='#C9DBF9';col='#1456C8';}
-      x.fillStyle=CARD;x.fillRect(M,y,TW,RH);
+      var ed=flag&&!mid&&r.ss&&r.ss.some(isEd),edIn=ed&&r.ss[0].oi!=null,edOut=ed&&r.ss[r.ss.length-1].oo!=null;
+      x.fillStyle=ed?'#FFF3B0':CARD;x.fillRect(M,y,TW,RH);
+      if(ed){x.save();x.beginPath();x.rect(M,y,TW,RH);x.clip();x.shadowColor='#F2B800';x.shadowBlur=18;x.strokeStyle='#F2B800';x.lineWidth=4;x.strokeRect(M-2,y-2,TW+4,RH+4);x.restore();}
       if(mid){x.fillStyle=bg;x.fillRect(M+cx[1],y,cx[3]-cx[1],RH);}
       x.strokeStyle=LINE;x.lineWidth=1.5;x.strokeRect(M,y,TW,RH);
       ctext(date+(r.half?'  ½':''),M+(cx[0]+cx[1])/2,ty,'500 19px sans-serif',INK);
       if(mid){ctext(mid,M+(cx[1]+cx[3])/2,ty,'700 19px sans-serif',col);ctext('—',M+(cx[3]+cx[4])/2,ty,'500 19px sans-serif','#51607E');}
       else{
         var out=r.outMs!=null?clockMs(r.outMs)+(dkeyD(new Date(r.outMs))!==r.key?' (+1)':''):'—';
-        ctext(clockMs(r.inMs),M+(cx[1]+cx[2])/2,ty,'500 19px sans-serif',INK);
-        ctext(out,M+(cx[2]+cx[3])/2,ty,'500 19px sans-serif',INK);
+        ctext(clockMs(r.inMs),M+(cx[1]+cx[2])/2,ty,(edIn?'800':'500')+' 19px sans-serif',INK);
+        ctext(out,M+(cx[2]+cx[3])/2,ty,(edOut?'800':'500')+' 19px sans-serif',INK);
         ctext(otText(r.ot),M+(cx[3]+cx[4])/2,ty,'500 19px sans-serif',INK);
       }
       [1,2,3].forEach(function(i){if(mid&&i===2)return;x.beginPath();x.moveTo(M+cx[i],y);x.lineTo(M+cx[i],y+RH);x.stroke();});
       y+=RH;
     });
+  }
+  list.forEach(function(e){
+    var ks=editedKeys(e);
+    if(!ks.some(inMonth)){drawEmp(e,'',false);return;}   /* nothing edited this month: one page, as before */
+    /* a month with edits gets the real punches first (page 1) and the updated report after it (page 2) */
+    var real=Object.assign({},e,{log:e.log.map(function(s){return {id:s.id,i:s.oi!=null?s.oi:s.i,o:s.oo!=null?(s.oo<0?null:s.oo):s.o,oi:s.oi,oo:s.oo};})});
+    drawEmp(real,'REAL (original punches)',true);
+    drawEmp(e,'UPDATED (after edit)',true);
   });
   return pagesToPdf(pages,W,H,false);
 }
@@ -790,7 +803,7 @@ function stopSync(){
 function watchPunches(e){
   if(CL.unP[e.fid])return;
   CL.unP[e.fid]=CL.m.onSnapshot(ccol(empPath(e.fid)+'/punches'),function(snap){
-    var arr=[];snap.forEach(function(d){var v=d.data();arr.push({id:d.id,i:v.i,o:v.o==null?null:v.o});});
+    var arr=[];snap.forEach(function(d){var v=d.data();arr.push({id:d.id,i:v.i,o:v.o==null?null:v.o,oi:v.oi==null?null:v.oi,oo:v.oo==null?null:v.oo});});
     arr.sort(function(a,b){return a.i-b.i;});e.log=arr;softRender();
   },cloudErr);
 }
@@ -1296,11 +1309,15 @@ root.addEventListener('click',function(ev){
       if(!ti){toast('Enter the Punch In time');return;}
       var f0=pd.ss[0],l0=pd.ss[pd.ss.length-1],bd=new Date(pd.inMs),fid0=f0.id||String(f0.i),lid0=l0.id||String(l0.i);
       var ni=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate(),+ti.split(':')[0],+ti.split(':')[1]).getTime();
-      f0.id=fid0;l0.id=lid0;f0.i=ni;
-      if(to){var no=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate(),+to.split(':')[0],+to.split(':')[1]).getTime();if(no<=ni)no+=DAYMS;l0.o=no;}   /* earlier than Punch In = next morning */
+      f0.id=fid0;l0.id=lid0;
+      /* the first time a time is changed, the real punch is kept for ever (oi = real Punch In, oo = real Punch Out, -1 = none) */
+      if(hhmm(ni)!==hhmm(f0.i)){if(f0.oi==null)f0.oi=f0.i;f0.i=ni;}
+      if(to){var no=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate(),+to.split(':')[0],+to.split(':')[1]).getTime();if(no<=ni)no+=DAYMS;   /* earlier than Punch In = next morning */
+        if(l0.o==null||hhmm(no)!==hhmm(l0.o)){if(l0.oo==null)l0.oo=(l0.o==null?-1:l0.o);l0.o=no;}}
       pe2.log.sort(function(a,b){return a.i-b.i;});
       [f0,l0].filter(function(q,ix,a){return a.indexOf(q)===ix;}).forEach(function(q){
-        CL.m.setDoc(cdoc(empPath(pe2.fid)+'/punches/'+q.id),{i:q.i,o:q.o==null?null:q.o}).catch(cloudErr);
+        var pl={i:q.i,o:q.o==null?null:q.o};if(q.oi!=null)pl.oi=q.oi;if(q.oo!=null)pl.oo=q.oo;
+        CL.m.setDoc(cdoc(empPath(pe2.fid)+'/punches/'+q.id),pl).catch(cloudErr);
       });
       S.pe=null;msg='Time updated';break;
     case 'qr-do':qrAction(b.dataset.w,byId(S.sub&&S.sub.id));return;
