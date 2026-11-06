@@ -261,6 +261,8 @@ select.inp,.sel{appearance:none;-webkit-appearance:none;text-align-last:center;p
 .xl th:first-child,.xl td:first-child{border-left:1px solid var(--grid)}
 .xl thead th{position:sticky;top:0;z-index:1;background:var(--head);color:var(--ink);font-size:11px;font-weight:700;border-top:1px solid var(--grid)}
 .xl td.dim{color:var(--muted)}
+.xl td.pe{padding:2px}.li.hli{display:flex;align-items:center;gap:10px;cursor:default}.hli .who{flex:1;min-width:0}.hli .who b{white-space:nowrap}.hli .iconbtn{flex:none}
+.pbtn{width:28px;height:28px;border:0;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:inline-grid;place-items:center}
 .xl td.lv{background:var(--warn-soft);color:var(--warn);font-weight:700}
 .xl td.hd{background:var(--accent-soft);color:var(--accent);font-weight:700}
 .xl .hf{color:var(--accent);font-weight:700;font-size:11px}
@@ -321,11 +323,14 @@ textarea.inp{height:140px;padding:12px 14px;text-align:left;resize:none;font-fam
 a.prow{color:inherit;text-decoration:none}
 #offb{position:fixed;top:0;left:0;right:0;z-index:50;background:#8F5600;color:#fff;text-align:center;font:600 12px var(--body);padding:5px 10px}
 .toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));margin-inline:auto;max-width:420px;z-index:30;background:var(--ink);color:var(--frame);padding:11px 16px;border-radius:14px;font-weight:600;text-align:center}
+#splash{position:fixed;inset:0;z-index:999;background:url(splash.jpg) center/contain no-repeat,linear-gradient(#0A3FA0,#8FB4EE 50%,#0A3FA0);transition:opacity .45s}#splash.out{opacity:0;pointer-events:none}
 </style>
 
+<div id="splash"></div>
 <div id="app"></div>
 
 <script>
+(function(){var sp=document.getElementById("splash");setTimeout(function(){sp.className="out";setTimeout(function(){sp.remove()},600)},2000)})();
 (function(){
 var root=document.getElementById('app');
 var NOW=new Date(), TY=NOW.getFullYear(), TM=NOW.getMonth(), TD=NOW.getDate();
@@ -399,7 +404,7 @@ function migrate(e){
 }
 var KEY='payroll-demo-v2';
 var S={
-  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,role:null,dh:null,confirmDel:false,
+  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,pe:null,holOpen:false,holidays:[],role:null,dh:null,confirmDel:false,
   tab:'home',sub:null,aprof:false,q:'',rm:TM,ry:TY,etab:'home',cam:null,meId:null,camId:0,form:{sun:'y',apply:'cur',otx:'1',sunw:'duty',starter:'old'}
 };
 function save(){}   /* data now lives in Firebase; Firestore keeps its own offline copy */
@@ -453,7 +458,7 @@ function dutiesOf(e){
     var ot=(!stale&&(open||lo!=null))?Math.max(0,w-(FULL+BREAK)):0;
     if(grace>0){var rem=ot%30;if(rem<=grace)ot-=rem;}                       /* minutes within the allowance past each half hour have no value */
     if(stale)w=Math.max(w,FULL);
-    return {key:dkeyD(new Date(f.i)),inMs:f.i,outMs:(open||stale)?null:lo,w:w,open:open,ot:ot,stale:stale};
+    return {key:dkeyD(new Date(f.i)),inMs:f.i,outMs:(open||stale)?null:lo,w:w,open:open,ot:ot,stale:stale,ss:g.ss};
   });
 }
 function isActive(e){var l=e.log[e.log.length-1];return !!(l&&l.o==null&&Date.now()-l.i<DAYMS);}
@@ -479,7 +484,7 @@ function monthData(e,y,m){
   if(!ds.length)return out;                      /* not started yet: no leave, no bonus */
   var by={};ds.forEach(function(u){by[u.key]=u;});
   var startKey=ds[0].key,last=c===0?rD:new Date(y,m+1,0).getDate(),list=[],otTotal=0;
-  var rt=ratesFor(e,y,m),sunOT=(rt.sunw==='ot');
+  var rt=ratesFor(e,y,m),sunOT=(rt.sunw==='ot'),hol={};(S.holidays||[]).forEach(function(h){hol[h.d]=h.n||'';});
   function worked(k){var q=by[k];return !!q&&(q.open||q.w>=HALF);}
   function dayBefore(yy,mm,dd){return dkeyD(new Date(yy,mm,dd-1));}
   for(var d=1;d<=last;d++){
@@ -489,11 +494,12 @@ function monthData(e,y,m){
     var isSun=new Date(y,m,d).getDay()===0,isToday=c===0&&d===rD,u=by[key],row=null;
     var paidSun=isSun&&!!e.sunPaid&&worked(dayBefore(y,m,d));
     if(u){
-      row={d:d,key:key,inMs:u.inMs,outMs:u.outMs,w:u.w,open:u.open,ot:u.ot};
+      row={d:d,key:key,inMs:u.inMs,outMs:u.outMs,w:u.w,open:u.open,ot:u.ot,ss:u.ss};
       if(isSun){row.sun=true;row.paidSun=paidSun;if(sunOT){row.sunOT=true;row.ot=u.stale?0:u.w;}}   /* Sunday work as OT: every hour is OT */
       otTotal+=row.ot;
     }
     else if(isSun){if(paidSun)row={d:d,holiday:true};else if(e.sunPaid&&!isToday)row={d:d,leave:true};}   /* a Sunday inside a stretch of absence is listed as leave and not paid */
+    else if(key in hol){row={d:d,holiday:true,hname:hol[key]};}   /* a holiday set by the company, paid for everyone */
     else if(!isToday){row={d:d,leave:true};}     /* a day counts as leave only after it has fully passed */
     if(row)list.push(row);
   }
@@ -564,19 +570,22 @@ function selectsHTML(ex){
   return '<div class="rbar gut'+(ex?' ex':'')+'"><span class="selw">'+ic('calendar',16)+'<select id="rm" class="inp sel" aria-label="Month">'+mo+'</select></span><span class="selw">'+ic('calendar',16)+'<select id="ry" class="inp sel" aria-label="Year">'+yo+'</select></span>'+
    (ex?'<button class="iconbtn" data-act="'+ex+'-pdf" aria-label="Download PDF">'+ic('download',20)+'</button>':'')+'</div>';
 }
+function hhmm(ms){var d=new Date(ms);return p2(d.getHours())+':'+p2(d.getMinutes());}
 function historyHTML(e){
-  var rows=monthData(e,S.ry,S.rm).rows;
+  var rows=monthData(e,S.ry,S.rm).rows,ed=S.role==='admin'&&byId(e.id)===e;   /* only the admin can correct times */
+  var pen=function(x){return ed?'<td class="pe">'+(x&&x.ss?'<button class="pbtn" data-act="pe-open" data-id="'+e.id+'" data-k="'+x.key+'" aria-label="Edit time">'+ic('edit',15)+'</button>':'')+'</td>':'';};
   var body=rows.map(function(x){
     var date=p2(x.d)+'-'+p2(S.rm+1)+'-'+S.ry,dc='<td>'+date+'</td>';
-    if(x.leave)return '<tr>'+dc+'<td class="lv" colspan="2">Leave</td><td class="dim">—</td></tr>';
-    if(x.shortLeave)return '<tr>'+dc+'<td class="lv" colspan="2">Leave · '+hm(x.w)+'</td><td class="dim">—</td></tr>';
-    if(x.holiday)return '<tr>'+dc+'<td class="hd" colspan="2">Holiday</td><td class="dim">—</td></tr>';
+    if(x.leave)return '<tr>'+dc+'<td class="lv" colspan="2">Leave</td><td class="dim">—</td>'+pen(null)+'</tr>';
+    if(x.shortLeave)return '<tr>'+dc+'<td class="lv" colspan="2">Leave · '+hm(x.w)+'</td><td class="dim">—</td>'+pen(x)+'</tr>';
+    if(x.holiday)return '<tr>'+dc+'<td class="hd" colspan="2">Holiday'+(x.hname?' · '+esc(x.hname.slice(0,14)):'')+'</td><td class="dim">—</td>'+pen(null)+'</tr>';
     var outC=x.outMs!=null?clockMs(x.outMs)+(dkeyD(new Date(x.outMs))!==x.key?'<sup>+1</sup>':''):'<span class="dim">—</span>';
-    return '<tr><td>'+date+(x.half?' <b class="hf">½</b>':'')+'</td><td>'+clockMs(x.inMs)+'</td><td>'+outC+'</td><td>'+otText(x.ot)+'</td></tr>';
+    return '<tr><td>'+date+(x.half?' <b class="hf">½</b>':'')+'</td><td>'+clockMs(x.inMs)+'</td><td>'+outC+'</td><td>'+otText(x.ot)+'</td>'+pen(x)+'</tr>';
   }).join('');
+  var cg=ed?'<col style="width:27%"><col style="width:21%"><col style="width:24%"><col style="width:15%"><col style="width:13%">':'<col style="width:33%"><col style="width:24%"><col style="width:24%"><col style="width:19%">';
   var table=rows.length?
-    '<table class="xl"><colgroup><col style="width:33%"><col style="width:24%"><col style="width:24%"><col style="width:19%"></colgroup>'+
-    '<thead><tr><th>Date</th><th>Punch In</th><th>Punch Out</th><th>OT</th></tr></thead><tbody>'+body+'</tbody></table>':
+    '<table class="xl"><colgroup>'+cg+'</colgroup>'+
+    '<thead><tr><th>Date</th><th>Punch In</th><th>Punch Out</th><th>OT</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>'+body+'</tbody></table>':
     '<div class="empty">No attendance recorded for this month.</div>';
   return '<section class="hist" aria-label="Attendance History"><div class="cap">'+esc(e.name)+'<small>'+e.id+'</small></div><div class="hscroll">'+table+'</div></section>';
 }
@@ -650,120 +659,66 @@ function qrAction(w,e){
 /* ---------- reports: Excel (CSV), PDF (print), backup ---------- */
 function fname(t){return String(t).replace(/[^\w\u0900-\u097F-]+/g,'_');}
 function ml(){return MONTHS[S.rm]+' '+S.ry;}
-function dayCell(x){
-  if(x.leave)return ['Leave','',''];
-  if(x.shortLeave)return ['Leave · '+hm(x.w),'',''];
-  if(x.holiday)return ['Holiday','',''];
-  var o=x.outMs!=null?clockMs(x.outMs)+(dkeyD(new Date(x.outMs))!==x.key?' (+1)':''):'';
-  return [clockMs(x.inMs)+(x.half?'  (half day)':''),o,otText(x.ot)];
-}
-function allRowsData(){
-  var tot=0,rows=[['ID','Name','Category','Working','Leave','OT Hrs','Work Amt','OT Amt','Bonus','Total']];
-  S.emps.forEach(function(e){var c=calc(e,S.ry,S.rm);tot+=c.total;rows.push([e.id,e.name,e.cur.cat,nf(c.d.working),nf(c.d.leave),nf(c.otH),c.work,c.otAmt,c.added,c.total]);});
-  rows.push(['','Grand Total','','','','','','','',tot]);
-  return rows;
-}
-function oneRowsData(e){
-  var c=calc(e,S.ry,S.rm),rows=[[S.company],[e.name+' ('+e.id+')',ml()],[],
-    ['Monthly Salary',c.r.salary],['OT Rate / hour',c.r.ot],['Working Days',nf(c.d.working)],['Leave Days',nf(c.d.leave)],['OT Hours',nf(c.otH)],
-    ['Work Amount',c.work],['Overtime Amount',c.otAmt],['Attendance Bonus',c.added],['Grand Total Salary',c.total],[],['Date','Punch In','Punch Out','OT']];
-  c.d.rows.forEach(function(x){var d=dayCell(x);rows.push([p2(x.d)+'-'+p2(S.rm+1)+'-'+S.ry,d[0],d[1],d[2]]);});
-  return rows;
-}
-function pdfDoc(o){
-  var W=o.land?1754:1240,H=o.land?1240:1754,M=70,RH=52,pages=[],cv,x,y;
-  function newPage(){cv=document.createElement('canvas');cv.width=W;cv.height=H;x=cv.getContext('2d');x.fillStyle='#DCE8FA';x.fillRect(0,0,W,H);pages.push(cv);y=M;}
-  function fit(t,w){t=String(t);if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…';}
-  newPage();
-  y+=10;
-  x.fillStyle='#0E1A33';x.font='700 40px sans-serif';x.fillText(o.title,M,y+36);y+=70;
-  o.blocks.forEach(function(b){
-    var tw=W-2*M,cx=[0];b.cols.forEach(function(f,i){cx.push(cx[i]+f*tw);});
-    var al=b.align||[];
-    function drawRow(r,head,bold,n){
-      if(head){x.fillStyle='#C6D9F5';x.fillRect(M,y,tw,RH);}
-      else if(b.labelCol){x.fillStyle='#EAF1FC';x.fillRect(M,y,cx[1],RH);}
-      else{x.fillStyle='#F5F8FE';x.fillRect(M,y,tw,RH);}
-      if(bold){x.fillStyle='#DCE8FA';x.fillRect(M,y,tw,RH);}
-      x.strokeStyle='#A9C0E3';x.lineWidth=1.5;x.strokeRect(M,y,tw,RH);
-      r.forEach(function(c,i){
-        var t=String(c==null?'':c),w=cx[i+1]-cx[i]-28,a=al[i]||'l';
-        x.font=((head||bold||(b.labelCol&&i===0))?'700':'500')+' 25px sans-serif';
-        x.fillStyle='#0E1A33';
-        t=fit(t,w);x.textAlign=a==='r'?'right':(a==='c'?'center':'left');
-        x.fillText(t,a==='r'?M+cx[i+1]-14:(a==='c'?M+(cx[i]+cx[i+1])/2:M+cx[i]+14),y+RH-16);
-        if(i>0){x.beginPath();x.moveTo(M+cx[i],y);x.lineTo(M+cx[i],y+RH);x.stroke();}
-      });
-      x.textAlign='left';y+=RH;
-    }
-    b.rows.forEach(function(r,i){
-      if(y+RH>H-M){newPage();if(b.head&&i>0)drawRow(b.rows[0],true,false,0);}
-      drawRow(r,b.head&&i===0,b.boldLast&&i===b.rows.length-1,i);
-    });
-    y+=40;
-  });
-  return pagesToPdf(pages,W,H,o.land);
-}
 function pagesToPdf(pages,W,H,land){
   return makePdf(pages.map(function(c){var u=atob(c.toDataURL('image/jpeg',0.92).split(',')[1]),a=new Uint8Array(u.length);for(var i=0;i<u.length;i++)a[i]=u.charCodeAt(i);return a;}),W,H,land);
 }
-/* the employee report PDF looks like the report screen: header band, summary tiles, then the attendance list */
-function pdfEmployee(e){
-  var c=calc(e,S.ry,S.rm),W=1240,H=1754,M=60,TW=W-2*M,G=22,pages=[],cv,x,y,FR='#DCE8FA',CARD='#F5F8FE',LINE='#A9C0E3',INK='#0E1A33';
+/* report PDF: one page per employee (header band, summary boxes, the whole month's attendance), all in one file */
+function pdfEmployees(list){
+  var W=1240,H=1754,M=50,TW=W-2*M,G=18,pages=[],cv,x,y,FR='#DCE8FA',CARD='#F5F8FE',LINE='#A9C0E3',INK='#0E1A33';
   function newPage(){cv=document.createElement('canvas');cv.width=W;cv.height=H;x=cv.getContext('2d');x.fillStyle=FR;x.fillRect(0,0,W,H);pages.push(cv);y=M;}
   function rr(px,py,w,h,r,fill,stroke){x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath();if(fill){x.fillStyle=fill;x.fill();}if(stroke){x.strokeStyle=stroke;x.lineWidth=2;x.stroke();}}
   function fit(t,w){t=String(t);if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…';}
   function ctext(t,cx,py,font,col){x.font=font;x.fillStyle=col;x.textAlign='center';x.fillText(t,cx,py);x.textAlign='left';}
   function tile(px,py,w,h,label,val,big){
-    rr(px,py,w,h,22,CARD,'#C3D4EE');
-    ctext(val,px+w/2,py+h/2+(big?18:14),'700 '+(big?'46':'36')+'px sans-serif',INK);
-    x.font='800 21px sans-serif';var lw=x.measureText(label).width+26;
-    rr(px+w/2-lw/2,py-16,lw,32,10,FR);
-    ctext(label,px+w/2,py+6,'800 21px sans-serif','#000');
+    rr(px,py,w,h,18,CARD,'#C3D4EE');
+    ctext(val,px+w/2,py+h/2+(big?15:12),'700 '+(big?'40':'31')+'px sans-serif',INK);
+    x.font='800 19px sans-serif';var lw=x.measureText(label).width+24;
+    rr(px+w/2-lw/2,py-14,lw,28,9,FR);
+    ctext(label,px+w/2,py+5,'800 19px sans-serif','#000');
   }
-  newPage();
-  rr(M,y,TW,190,30,'#0F47B5');
-  ctext(fit(S.company,TW-60),W/2,y+66,'700 46px sans-serif','#fff');
-  ctext(fit(e.name+'  ·  '+e.id,TW-60),W/2,y+116,'600 34px sans-serif','#fff');
-  ctext(ml(),W/2,y+160,'500 27px sans-serif','#C9DBF9');
-  y+=190+52;
-  var h=98,step=h+46,w2=(TW-G)/2,w3=(TW-2*G)/3;
-  tile(M,y,w2,h,'Monthly Salary (Fixed)',fmt(c.r.salary));tile(M+w2+G,y,w2,h,'OT Rate (Fixed)',fmt(c.r.ot)+'/hr');y+=step;
-  tile(M,y,w3,h,'Working Days',nf(c.d.working));tile(M+w3+G,y,w3,h,'Leave Days',nf(c.d.leave));tile(M+2*(w3+G),y,w3,h,'OT Hours',nf(c.otH));y+=step;
-  tile(M,y,w3,h,'Work Amount',fmt(c.work));tile(M+w3+G,y,w3,h,'Overtime Amount',fmt(c.otAmt));tile(M+2*(w3+G),y,w3,h,'Attendance Bonus',fmt(c.bonus));y+=step;
-  tile(M,y,TW,116,'Grand Total Salary',fmt(c.total),true);y+=116+44;
-  /* attendance list */
-  var RH=54,cols=[.28,.24,.24,.24],cx=[0];cols.forEach(function(f,i){cx.push(cx[i]+f*TW);});
-  function head(){
-    x.fillStyle='#C6D9F5';x.fillRect(M,y,TW,RH);x.strokeStyle=LINE;x.lineWidth=1.5;x.strokeRect(M,y,TW,RH);
-    ['Date','Punch In','Punch Out','OT'].forEach(function(t,i){ctext(t,M+(cx[i]+cx[i+1])/2,y+RH-17,'700 24px sans-serif',INK);if(i>0){x.beginPath();x.moveTo(M+cx[i],y);x.lineTo(M+cx[i],y+RH);x.stroke();}});
-    y+=RH;
-  }
-  ctext(fit(e.name+'  '+e.id,TW),W/2,y+22,'700 28px sans-serif',INK);y+=44;
-  head();
-  var rows=c.d.rows;
-  if(!rows.length){x.fillStyle=CARD;x.fillRect(M,y,TW,RH);x.strokeRect(M,y,TW,RH);ctext('No attendance recorded for this month.',W/2,y+RH-17,'500 24px sans-serif','#51607E');y+=RH;}
-  rows.forEach(function(r){
-    if(y+RH>H-M){newPage();head();}
-    var date=p2(r.d)+'-'+p2(S.rm+1)+'-'+S.ry,mid=null,bg=CARD,col=INK,txt='';
-    if(r.leave){mid='Leave';bg='#FFDDA8';col='#8F5600';}
-    else if(r.shortLeave){mid='Leave · '+hm(r.w);bg='#FFDDA8';col='#8F5600';}
-    else if(r.holiday){mid='Holiday';bg='#C9DBF9';col='#1456C8';}
-    x.fillStyle=CARD;x.fillRect(M,y,TW,RH);
-    if(mid){x.fillStyle=bg;x.fillRect(M+cx[1],y,cx[3]-cx[1],RH);}
-    x.strokeStyle=LINE;x.lineWidth=1.5;x.strokeRect(M,y,TW,RH);
-    ctext(date+(r.half?'  ½':''),M+(cx[0]+cx[1])/2,y+RH-17,'500 24px sans-serif',INK);
-    if(mid){ctext(mid,M+(cx[1]+cx[3])/2,y+RH-17,'700 24px sans-serif',col);ctext('\u2014',M+(cx[3]+cx[4])/2,y+RH-17,'500 24px sans-serif','#51607E');}
-    else{
-      var out=r.outMs!=null?clockMs(r.outMs)+(dkeyD(new Date(r.outMs))!==r.key?' (+1)':''):'—';
-      ctext(clockMs(r.inMs),M+(cx[1]+cx[2])/2,y+RH-17,'500 24px sans-serif',INK);
-      ctext(out,M+(cx[2]+cx[3])/2,y+RH-17,'500 24px sans-serif',INK);
-      ctext(otText(r.ot),M+(cx[3]+cx[4])/2,y+RH-17,'500 24px sans-serif',INK);
-      [2,3].forEach(function(i){x.beginPath();x.moveTo(M+cx[i],y);x.lineTo(M+cx[i],y+RH);x.stroke();});
+  var RH=31,cols=[.28,.24,.24,.24],cx=[0];cols.forEach(function(f,i){cx.push(cx[i]+f*TW);});
+  list.forEach(function(e){
+    var c=calc(e,S.ry,S.rm);
+    newPage();
+    rr(M,y,TW,150,26,'#0F47B5');
+    ctext(fit(S.company,TW-60),W/2,y+52,'700 40px sans-serif','#fff');
+    ctext(fit(e.name+'  ·  '+e.id,TW-60),W/2,y+94,'600 30px sans-serif','#fff');
+    ctext(ml(),W/2,y+130,'500 24px sans-serif','#C9DBF9');
+    y+=150+40;
+    var h=76,step=h+34,w2=(TW-G)/2,w3=(TW-2*G)/3;
+    tile(M,y,w2,h,'Monthly Salary (Fixed)',fmt(c.r.salary));tile(M+w2+G,y,w2,h,'OT Rate (Fixed)',fmt(c.r.ot)+'/hr');y+=step;
+    tile(M,y,w3,h,'Working Days',nf(c.d.working));tile(M+w3+G,y,w3,h,'Leave Days',nf(c.d.leave));tile(M+2*(w3+G),y,w3,h,'OT Hours',nf(c.otH));y+=step;
+    tile(M,y,w3,h,'Work Amount',fmt(c.work));tile(M+w3+G,y,w3,h,'Overtime Amount',fmt(c.otAmt));tile(M+2*(w3+G),y,w3,h,'Attendance Bonus',fmt(c.bonus));y+=step;
+    tile(M,y,TW,90,'Grand Total Salary',fmt(c.total),true);y+=90+30;
+    function head(){
+      x.fillStyle='#C6D9F5';x.fillRect(M,y,TW,RH+2);x.strokeStyle=LINE;x.lineWidth=1.5;x.strokeRect(M,y,TW,RH+2);
+      ['Date','Punch In','Punch Out','OT'].forEach(function(t,i){ctext(t,M+(cx[i]+cx[i+1])/2,y+RH-8,'700 19px sans-serif',INK);if(i>0){x.beginPath();x.moveTo(M+cx[i],y);x.lineTo(M+cx[i],y+RH+2);x.stroke();}});
+      y+=RH+2;
     }
-    if(mid){x.beginPath();x.moveTo(M+cx[3],y);x.lineTo(M+cx[3],y+RH);x.stroke();}
-    x.beginPath();x.moveTo(M+cx[1],y);x.lineTo(M+cx[1],y+RH);x.stroke();
-    y+=RH;
+    ctext(fit(e.name+'  '+e.id,TW),W/2,y+16,'700 23px sans-serif',INK);y+=32;
+    head();
+    var rows=c.d.rows;
+    if(!rows.length){x.fillStyle=CARD;x.fillRect(M,y,TW,RH+6);x.strokeRect(M,y,TW,RH+6);ctext('No attendance recorded for this month.',W/2,y+RH-6,'500 19px sans-serif','#51607E');y+=RH+6;}
+    rows.forEach(function(r){
+      if(y+RH>H-M){newPage();head();}
+      var date=p2(r.d)+'-'+p2(S.rm+1)+'-'+S.ry,mid=null,bg=CARD,col=INK,ty=y+RH-9;
+      if(r.leave){mid='Leave';bg='#FFDDA8';col='#8F5600';}
+      else if(r.shortLeave){mid='Leave · '+hm(r.w);bg='#FFDDA8';col='#8F5600';}
+      else if(r.holiday){mid='Holiday'+(r.hname?' \u00b7 '+r.hname.slice(0,22):'');bg='#C9DBF9';col='#1456C8';}
+      x.fillStyle=CARD;x.fillRect(M,y,TW,RH);
+      if(mid){x.fillStyle=bg;x.fillRect(M+cx[1],y,cx[3]-cx[1],RH);}
+      x.strokeStyle=LINE;x.lineWidth=1.5;x.strokeRect(M,y,TW,RH);
+      ctext(date+(r.half?'  ½':''),M+(cx[0]+cx[1])/2,ty,'500 19px sans-serif',INK);
+      if(mid){ctext(mid,M+(cx[1]+cx[3])/2,ty,'700 19px sans-serif',col);ctext('—',M+(cx[3]+cx[4])/2,ty,'500 19px sans-serif','#51607E');}
+      else{
+        var out=r.outMs!=null?clockMs(r.outMs)+(dkeyD(new Date(r.outMs))!==r.key?' (+1)':''):'—';
+        ctext(clockMs(r.inMs),M+(cx[1]+cx[2])/2,ty,'500 19px sans-serif',INK);
+        ctext(out,M+(cx[2]+cx[3])/2,ty,'500 19px sans-serif',INK);
+        ctext(otText(r.ot),M+(cx[3]+cx[4])/2,ty,'500 19px sans-serif',INK);
+      }
+      [1,2,3].forEach(function(i){if(mid&&i===2)return;x.beginPath();x.moveTo(M+cx[i],y);x.lineTo(M+cx[i],y+RH);x.stroke();});
+      y+=RH;
+    });
   });
   return pagesToPdf(pages,W,H,false);
 }
@@ -793,19 +748,12 @@ function dlBlob(name,blob){
 }
 function doExport(kind,e){
   if(kind==='all-pdf'){
-    dlBlob('Salary-'+fname(ml())+'.pdf',pdfDoc({land:true,title:'Salary Report',blocks:[{labelCol:true,cols:[.2,.8],rows:[['Company Name',S.company],['Month',ml()],['Employees',S.emps.length]]},{rows:allRowsData(),cols:[.08,.17,.11,.08,.08,.08,.1,.1,.1,.1],head:true,boldLast:true,align:['l','l','l','c','c','c','r','r','r','r']}]}));
+    if(!S.emps.length){toast('No employees yet');return;}
+    toast('Preparing PDF…');
+    setTimeout(function(){dlBlob('Report-'+fname(ml())+'.pdf',pdfEmployees(S.emps));},60);
   }else if(kind==='one-pdf'&&e){
-    dlBlob(fname(e.name+'-'+e.id)+'-'+fname(ml())+'.pdf',pdfEmployee(e));
+    dlBlob(fname(e.name+'-'+e.id)+'-'+fname(ml())+'.pdf',pdfEmployees([e]));
   }
-}
-/* erase everything this admin stored: punches, employees, company, then the sign-in itself */
-function wipeAccount(){
-  var m=CL.m,cid=CL.cid;stopSync();
-  return Promise.all(S.emps.concat(S.deleted).map(function(e){
-    return m.getDocs(ccol(empPath(e.fid)+'/punches')).then(function(sn){var j=[];sn.forEach(function(d){j.push(m.deleteDoc(d.ref));});return Promise.all(j);})
-      .then(function(){return m.deleteDoc(cdoc(empPath(e.fid)));});
-  })).then(function(){return m.deleteDoc(cdoc('companies/'+cid));})
-    .then(function(){var u=CL.au.currentUser;return u&&m.deleteUser?m.deleteUser(u).catch(function(){}):null;});
 }
 function searchList(title,extra){
   return rootTop(title)+(extra||'')+'<div class="searchbar gut"><label class="srch"><span class="sr">Search employee by name or ID</span>'+ic('search',18)+
@@ -829,9 +777,9 @@ function ccol(path){return CL.m.collection(CL.db,path);}
 function empPath(fid){return 'companies/'+CL.cid+'/employees/'+fid;}
 function empDoc(e){return {id:e.id,name:e.name,cur:e.cur,prev:e.prev||null,next:e.next||null,sunPaid:e.sunPaid!==false,status:e.delAt?'deleted':'active',starter:e.starter||'old',delAt:e.delAt||null,gaps:e.gaps||[],createdAt:e.createdAt||Date.now()};}
 function saveEmp(e){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc(empPath(e.fid)),empDoc(e),{merge:true}).catch(cloudErr);}
-function saveCompany(){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc('companies/'+CL.cid),{ownerUid:CL.uid,name:S.company,logo:S.logo||null,nextNum:S.nextNum,cfgStart:S.cfg.start||'',cfgLunch:+S.cfg.lunch||0,cfgGrace:+S.cfg.grace},{merge:true}).catch(cloudErr);}
-function savePunch(e,s){if(!CL.ok)return;var r=cdoc(empPath(e.fid)+'/punches/'+s.i);(s.o==null?CL.m.setDoc(r,{i:s.i,o:null}):CL.m.updateDoc(r,{o:s.o})).catch(cloudErr);}
-function applyCfg(v){S.cfg={start:v.cfgStart||'',lunch:+v.cfgLunch||0,grace:v.cfgGrace==null?10:+v.cfgGrace};}
+function saveCompany(){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc('companies/'+CL.cid),{ownerUid:CL.uid,name:S.company,logo:S.logo||null,nextNum:S.nextNum,cfgStart:S.cfg.start||'',cfgLunch:+S.cfg.lunch||0,cfgGrace:+S.cfg.grace,holidays:S.holidays||[]},{merge:true}).catch(cloudErr);}
+function savePunch(e,s){if(!CL.ok)return;if(!s.id)s.id=String(s.i);var r=cdoc(empPath(e.fid)+'/punches/'+s.id);(s.o==null?CL.m.setDoc(r,{i:s.i,o:null}):CL.m.updateDoc(r,{o:s.o})).catch(cloudErr);}
+function applyCfg(v){S.holidays=Array.isArray(v.holidays)?v.holidays:[];S.cfg={start:v.cfgStart||'',lunch:+v.cfgLunch||0,grace:v.cfgGrace==null?10:+v.cfgGrace};}
 function nextNumber(){var mx=S.nextNum-1;S.emps.concat(S.deleted).forEach(function(e){var n=parseInt(String(e.id).slice(3),10);if(n>mx)mx=n;});return mx+1;}
 /* a snapshot can arrive while someone is typing: never rebuild the screen under their fingers */
 function softRender(){var a=document.activeElement;if(a&&root.contains(a)&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))return;render();}
@@ -842,7 +790,7 @@ function stopSync(){
 function watchPunches(e){
   if(CL.unP[e.fid])return;
   CL.unP[e.fid]=CL.m.onSnapshot(ccol(empPath(e.fid)+'/punches'),function(snap){
-    var arr=[];snap.forEach(function(d){var v=d.data();arr.push({i:v.i,o:v.o==null?null:v.o});});
+    var arr=[];snap.forEach(function(d){var v=d.data();arr.push({id:d.id,i:v.i,o:v.o==null?null:v.o});});
     arr.sort(function(a,b){return a.i-b.i;});e.log=arr;softRender();
   },cloudErr);
 }
@@ -936,7 +884,7 @@ function doLogout(msg){
   stopSync();clearEmp();
   var p=CL.ok&&CL.au&&S.role==='admin'?CL.m.signOut(CL.au):Promise.resolve();   /* an employee phone keeps its own anonymous id, so its QR link survives logout */
   if(CL.ok)useSide(CL.A);
-  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.cfgOpen=false;
+  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.holidays=[];S.holOpen=false;S.cfgOpen=false;
   S.aprof=false;S.dh=null;S.sub=null;S.q='';S.cam=null;S.screen='start';render();
   if(msg)toast(msg);
   p.catch(function(){});
@@ -1090,6 +1038,15 @@ VIEWS.admin=function(){
     if(S.dh.id){var de=delById(S.dh.id);main=subTop(esc(de.name)+' · Deleted','dh-back')+'<div class="gut" style="padding-bottom:2px"><button class="btn sm" style="min-height:38px;width:100%" data-act="rs-do" data-id="'+de.id+'">Restore Employee</button></div>'+reportScreen(de);}
     else main=subTop('Delete History','dh-back')+'<div class="searchbar gut"><label class="srch"><span class="sr">Search deleted employee by name or ID</span>'+ic('search',18)+'<input id="search" class="inp" type="search" placeholder="Search by name or ID" value="'+esc(S.q)+'" autocomplete="off" enterkeyhint="search"></label></div>'+
       '<span class="hint gut">Records here are kept permanently and cannot be deleted.</span><div class="body gut" id="plist">'+dhListHTML()+'</div>';
+  }else if(S.aprof&&S.holOpen){
+    var DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],hs=(S.holidays||[]).slice().sort(function(a,b){return a.d<b.d?-1:1;});
+    main=subTop('Holidays','hol-back')+'<div class="body gut">'+
+     field('hol-d','Date','date','','')+
+     field('hol-n','Holiday name (optional)','text','','maxlength="30" placeholder="e.g. Diwali" enterkeyhint="done"')+
+     '<button class="btn" data-act="hol-add">Add Holiday</button>'+
+     '<span class="hint">Every employee gets these dates as a paid Holiday automatically.</span>'+
+     (hs.length?'<ul class="list">'+hs.map(function(h){var q=h.d.split('-'),dt=new Date(+q[0],+q[1]-1,+q[2]);
+       return '<li><div class="li hli"><span class="who"><b>'+q[2]+'-'+q[1]+'-'+q[0]+' · '+DN[dt.getDay()]+'</b>'+(h.n?'<small>'+esc(h.n)+'</small>':'')+'</span><button class="iconbtn" data-act="hol-del" data-d="'+h.d+'" aria-label="Remove holiday">'+ic('trash',18)+'</button></div></li>';}).join('')+'</ul>':'<div class="empty">No holidays added yet.</div>')+'</div>';
   }else if(S.aprof&&S.cfgOpen){
     main=subTop('Duty Settings','cfg-back')+'<div class="body gut">'+
      field('c-start','Duty Start Time','time',S.cfg.start||'','enterkeyhint="next"')+
@@ -1108,10 +1065,10 @@ VIEWS.admin=function(){
      '</div>'+
      '<div class="prow">'+ic('globe',20)+'<b>Language</b><span class="v">English</span></div>'+
      '<button class="prow" data-act="cfg-open">'+ic('clock',20)+'<b>Duty Settings</b></button>'+
+     '<button class="prow" data-act="hol-open">'+ic('calendar',20)+'<b>Holidays</b></button>'+
      '<button class="prow" data-act="dh-open">'+ic('trash',20)+'<b>Delete Employee History</b></button>'+
      '<button class="prow" data-act="fb-open">'+ic('edit',20)+'<b>Send Feedback</b></button>'+
      '<a class="prow" href="privacy.html" target="_blank" rel="noopener">'+ic('shield',20)+'<b>Privacy Policy</b></a>'+
-     '<button class="prow out" data-act="acct-ask">'+ic('trash',20)+'<b>Delete Account &amp; Data</b></button>'+
      '<button class="prow out" data-act="logout">'+ic('logout',20)+'<b>Logout</b></button></div>';
   }else if(S.tab==='home'){
     if(!sub){
@@ -1160,7 +1117,10 @@ VIEWS.admin=function(){
   }
   var dlg='';
   if(S.confirmDel&&byId(S.confirmDel)){var dx=byId(S.confirmDel);dlg='<div class="dlg" role="dialog" aria-label="Delete employee"><div class="cfm"><b>Delete '+esc(dx.name)+'?</b><span>Removed from everywhere and their QR stops working. The full record stays in Delete History, where you can restore it.</span><div class="act2"><button class="btn sec sm" data-act="del-no">Cancel</button><button class="btn sm danger" data-act="del-yes">Delete</button></div></div></div>';}
-  if(S.confirmAcct){dlg='<div class="dlg" role="dialog" aria-label="Delete account"><div class="cfm"><b>Delete account and all data?</b><span>All employees, attendance records and QR codes will be erased for good. This cannot be undone. Type DELETE to confirm.</span><input class="inp" id="acct-word" type="text" autocomplete="off" placeholder="DELETE"><div class="act2"><button class="btn sec sm" data-act="acct-no">Cancel</button><button class="btn sm danger" data-act="acct-yes">Delete All</button></div></div></div>';}
+  if(S.pe&&byId(S.pe.id)){var pr=S.pe;dlg='<div class="dlg" role="dialog" aria-label="Edit time"><div class="cfm"><b>Edit time · '+esc(pr.date)+'</b><span>Correct the punch times of this duty. A time earlier than Punch In is taken as the next morning (night duty).</span>'+
+    '<div class="field"><label for="pe-in">Punch In</label><input class="inp" id="pe-in" type="time" value="'+pr.i+'"></div>'+
+    '<div class="field"><label for="pe-out">Punch Out</label><input class="inp" id="pe-out" type="time" value="'+pr.o+'"></div>'+
+    '<div class="act2"><button class="btn sec sm" data-act="pe-no">Cancel</button><button class="btn sm" data-act="pe-save">Save</button></div></div></div>';}
   return '<div class="scr">'+main+'</div>'+navHTML(ANAV,S.aprof?'':S.tab,'tab')+dlg;
 };
 VIEWS.emp=function(){
@@ -1252,9 +1212,18 @@ root.addEventListener('click',function(ev){
     case 'setup-save':
       if(!val('cname')){toast('Enter the company name');return;}
       S.company=val('cname');S.setupDone=true;saveCompany();S.screen='admin';S.tab='home';S.sub=null;S.aprof=false;S.q='';break;
-    case 'tab':S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.confirmAcct=false;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
-    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;break;
-    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;break;
+    case 'tab':S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.confirmAcct=false;S.pe=null;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
+    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;break;
+    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;break;
+    case 'hol-open':S.holOpen=true;break;
+    case 'hol-back':S.holOpen=false;break;
+    case 'hol-add':
+      var hd=val('hol-d'),hn=val('hol-n').slice(0,30);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(hd)){toast('Pick the holiday date');return;}
+      S.holidays=(S.holidays||[]).filter(function(h){return h.d!==hd;});S.holidays.push({d:hd,n:hn});
+      saveCompany();msg='Holiday added';break;
+    case 'hol-del':
+      S.holidays=(S.holidays||[]).filter(function(h){return h.d!==b.dataset.d;});saveCompany();msg='Holiday removed';break;
     case 'cfg-open':S.cfgOpen=true;break;
     case 'cfg-back':S.cfgOpen=false;break;
     case 'cfg-save':
@@ -1311,18 +1280,29 @@ root.addEventListener('click',function(ev){
       if(!navigator.onLine){toast('No internet. Try again later.');return;}
       CL.m.setDoc(cdoc('feedback/'+randId()),{cid:CL.uid,company:S.company||'',email:S.gmail||'',text:ft.slice(0,1500),at:Date.now()}).then(function(){S.fbOpen=false;render();toast('Thank you! Feedback sent.');}).catch(function(err){console.error(err);toast('Could not send. Try again.');});
       return;
-    case 'acct-ask':S.confirmAcct=true;break;
-    case 'acct-no':S.confirmAcct=false;break;
-    case 'acct-yes':
-      if(val('acct-word').toUpperCase()!=='DELETE'){toast('Type DELETE to confirm');return;}
-      if(!navigator.onLine){toast('No internet. Try again later.');return;}
-      S.confirmAcct=false;toast('Deleting…');
-      wipeAccount().then(function(){doLogout('Your account and all data were deleted');}).catch(function(err){console.error(err);toast('Could not delete. Try again.');startAdminSync();});
-      return;
     case 'dev-reset':
       var dv=byId(S.sub&&S.sub.id);
       if(dv&&CL.ok){dv.dev=null;CL.m.updateDoc(cdoc(empPath(dv.fid)),{dev:null}).catch(cloudErr);msg='Phone link reset. The QR can be used on a new phone.';}
       break;
+    case 'pe-open':
+      var pe1=byId(id),pu=pe1&&dutiesOf(pe1).filter(function(u){return u.key===b.dataset.k;})[0];
+      if(pu){S.pe={id:id,key:pu.key,date:dkText(pu.inMs),i:hhmm(pu.inMs),o:pu.outMs!=null?hhmm(pu.outMs):''};}
+      break;
+    case 'pe-no':S.pe=null;break;
+    case 'pe-save':
+      var pe2=S.pe&&byId(S.pe.id),pd=pe2&&dutiesOf(pe2).filter(function(u){return u.key===S.pe.key;})[0];
+      if(!pd){S.pe=null;break;}
+      var ti=val('pe-in'),to=val('pe-out');
+      if(!ti){toast('Enter the Punch In time');return;}
+      var f0=pd.ss[0],l0=pd.ss[pd.ss.length-1],bd=new Date(pd.inMs),fid0=f0.id||String(f0.i),lid0=l0.id||String(l0.i);
+      var ni=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate(),+ti.split(':')[0],+ti.split(':')[1]).getTime();
+      f0.id=fid0;l0.id=lid0;f0.i=ni;
+      if(to){var no=new Date(bd.getFullYear(),bd.getMonth(),bd.getDate(),+to.split(':')[0],+to.split(':')[1]).getTime();if(no<=ni)no+=DAYMS;l0.o=no;}   /* earlier than Punch In = next morning */
+      pe2.log.sort(function(a,b){return a.i-b.i;});
+      [f0,l0].filter(function(q,ix,a){return a.indexOf(q)===ix;}).forEach(function(q){
+        CL.m.setDoc(cdoc(empPath(pe2.fid)+'/punches/'+q.id),{i:q.i,o:q.o==null?null:q.o}).catch(cloudErr);
+      });
+      S.pe=null;msg='Time updated';break;
     case 'qr-do':qrAction(b.dataset.w,byId(S.sub&&S.sub.id));return;
     case 'etab':S.etab=b.dataset.t;S.rm=TM;S.ry=TY;break;
     case 'soon':msg='Available in the next phase';break;
