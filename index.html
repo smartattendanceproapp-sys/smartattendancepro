@@ -341,6 +341,7 @@ var CATS=['Operator','Helper','Staff','Supervisor'];
 
 /* internal attendance rules (not shown on screens) */
 var FULL=480, HALF=240, BREAK=0;    /* minutes: 8 h full duty, 4 h half day; overtime starts after 8 h of work */
+var GAPOK=15;                     /* a break of up to 15 minutes between punches still counts as work; a longer one is cut */
 var REST_GAP=360;                   /* a gap of 6 h or more between punches starts a new duty */
 var DAYMS=24*3600*1000;             /* a punch-in left open for 24 h is treated as a forgotten punch-out */
 
@@ -406,7 +407,7 @@ function migrate(e){
 }
 var KEY='payroll-demo-v2';
 var S={
-  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,pe:null,holOpen:false,holidays:[],role:null,dh:null,confirmDel:false,
+  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,pe:null,holOpen:false,todayOpen:false,holidays:[],role:null,dh:null,confirmDel:false,
   tab:'home',sub:null,aprof:false,q:'',rm:TM,ry:TY,etab:'home',cam:null,meId:null,camId:0,form:{sun:'y',apply:'cur',otx:'1',sunw:'duty',starter:'old'}
 };
 function save(){}   /* data now lives in Firebase; Firestore keeps its own offline copy */
@@ -442,26 +443,55 @@ function dutiesOf(e){
     if(!cfg.start)return null;var p=String(cfg.start).split(':'),d=new Date(ms);
     return new Date(d.getFullYear(),d.getMonth(),d.getDate(),+p[0]||0,+p[1]||0).getTime();
   }
-  return groups.map(function(g){
-    var f=g.ss[0],w=0,open=false,stale=false,lo=null,last=g.ss.length-1;
-    var st=shiftStart(f.i),stdEnd=st==null?null:st+(FULL+BREAK+lunch)*60000;
-    g.ss.forEach(function(s,ix){
-      var si=s.i,so=s.o;
-      /* arriving or leaving within the allowance of the standard time counts as exactly on time */
-      if(ix===0&&st!=null&&Math.abs(si-st)<=grace*60000)si=st;
-      if(ix===last&&so!=null&&stdEnd!=null&&Math.abs(so-stdEnd)<=grace*60000)so=stdEnd;
-      if(so==null){
-        if(now-s.i<DAYMS){open=true;w+=Math.max(0,Math.round((now-si)/60000));}   /* still working: count the time so far */
-        else stale=true;
-      }
-      else{w+=Math.max(0,Math.round((so-si)/60000));lo=s.o;}
-    });
+  function mins(a,b){return Math.max(0,Math.round((b-a)/60000));}
+  function finish(w,stale,open,lo,key,inMs,ss,split){
     if(!stale&&lunch&&w>=300)w=Math.max(0,w-lunch);                        /* lunch is cut from every duty longer than 5 hours */
     var ot=(!stale&&(open||lo!=null))?Math.max(0,w-(FULL+BREAK)):0;
     if(grace>0){var rem=ot%30;if(rem<=grace)ot-=rem;}                       /* minutes within the allowance past each half hour have no value */
     if(stale)w=Math.max(w,FULL);
-    return {key:dkeyD(new Date(f.i)),inMs:f.i,outMs:(open||stale)?null:lo,w:w,open:open,ot:ot,stale:stale,ss:g.ss};
+    return {key:key,inMs:inMs,outMs:(open||stale)?null:lo,w:w,open:open,ot:ot,stale:stale,ss:ss,split:!!split};
+  }
+  var res=[];
+  groups.forEach(function(g){
+    var f=g.ss[0],open=false,stale=false,lo=null,last=g.ss.length-1,parts=[];
+    var st=shiftStart(f.i),stdEnd=st==null?null:st+(FULL+BREAK+lunch)*60000;
+    g.ss.forEach(function(s,ix){
+      var si=s.i,so=s.o,pv=ix?g.ss[ix-1]:null;
+      /* arriving or leaving within the allowance of the standard time counts as exactly on time */
+      if(ix===0&&st!=null&&Math.abs(si-st)<=grace*60000)si=st;
+      if(ix===last&&so!=null&&stdEnd!=null&&Math.abs(so-stdEnd)<=grace*60000)so=stdEnd;
+      if(pv&&pv.o!=null&&si>pv.o&&si-pv.o<=GAPOK*60000)parts.push([pv.o,si]);   /* a short break counts as work */
+      if(so==null){
+        if(now-s.i<DAYMS){open=true;parts.push([si,Math.max(si,now)]);}      /* still working: count the time so far */
+        else stale=true;
+      }
+      else{parts.push([si,Math.max(si,so)]);lo=s.o;}
+    });
+    var w=0;parts.forEach(function(p){w+=mins(p[0],p[1]);});
+    var span=parts.length?parts[parts.length-1][1]-parts[0][0]:0;
+    if(stale||span<DAYMS){res.push(finish(w,stale,open,lo,dkeyD(new Date(f.i)),f.i,g.ss,false));return;}
+    /* continuous work of 24 h or more: every date is its own duty (first 8 h duty, the rest OT) */
+    var segs=[];
+    parts.forEach(function(p){
+      var a=p[0];
+      while(a<p[1]){
+        var d=new Date(a),nm=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime(),b=Math.min(p[1],nm),k=dkeyD(d),sg=segs.length&&segs[segs.length-1].k===k?segs[segs.length-1]:null;
+        if(!sg){sg={k:k,a:a,b:b,w:0};segs.push(sg);}
+        sg.w+=mins(a,b);sg.b=b;a=b;
+      }
+    });
+    for(var i=0;i<segs.length&&segs.length>1;){          /* a piece shorter than a half day is added to its neighbour as OT */
+      if(segs[i].w<HALF){
+        if(i>0){segs[i-1].w+=segs[i].w;segs[i-1].b=segs[i].b;segs.splice(i,1);}
+        else{segs[1].w+=segs[0].w;segs[1].a=segs[0].a;segs[1].k=segs[0].k;segs.splice(0,1);}
+      }else i++;
+    }
+    segs.forEach(function(sg,ix){
+      var isLast=ix===segs.length-1;
+      res.push(finish(sg.w,false,isLast&&open,isLast?lo:sg.b,sg.k,ix===0?f.i:sg.a,g.ss,true));
+    });
   });
+  return res;
 }
 function isActive(e){var l=e.log[e.log.length-1];return !!(l&&l.o==null&&Date.now()-l.i<DAYMS);}
 /* On Leave: started earlier, not working now, and the last full working day (Sundays skipped) had no duty */
@@ -496,7 +526,7 @@ function monthData(e,y,m){
     var isSun=new Date(y,m,d).getDay()===0,isToday=c===0&&d===rD,u=by[key],row=null;
     var paidSun=isSun&&!!e.sunPaid&&worked(dayBefore(y,m,d));
     if(u){
-      row={d:d,key:key,inMs:u.inMs,outMs:u.outMs,w:u.w,open:u.open,ot:u.ot,ss:u.ss};
+      row={d:d,key:key,inMs:u.inMs,outMs:u.outMs,w:u.w,open:u.open,ot:u.ot,ss:u.ss,split:u.split};
       if(isSun){row.sun=true;row.paidSun=paidSun;if(sunOT){row.sunOT=true;row.ot=u.stale?0:u.w;}}   /* Sunday work as OT: every hour is OT */
       otTotal+=row.ot;
     }
@@ -570,7 +600,7 @@ function selectsHTML(ex){
 function hhmm(ms){var d=new Date(ms);return p2(d.getHours())+':'+p2(d.getMinutes());}
 function historyHTML(e){
   var rows=monthData(e,S.ry,S.rm).rows,ed=S.role==='admin'&&byId(e.id)===e;   /* only the admin can correct times */
-  var pen=function(x){return ed?'<td class="pe">'+(x&&x.ss?'<button class="pbtn" data-act="pe-open" data-id="'+e.id+'" data-k="'+x.key+'" aria-label="Edit time">'+ic('edit',15)+'</button>':'')+'</td>':'';};
+  var pen=function(x){return ed?'<td class="pe">'+(x&&x.ss&&!x.split?'<button class="pbtn" data-act="pe-open" data-id="'+e.id+'" data-k="'+x.key+'" aria-label="Edit time">'+ic('edit',15)+'</button>':'')+'</td>':'';};
   var body=rows.map(function(x){
     var date=p2(x.d)+'-'+p2(S.rm+1)+'-'+S.ry,dc='<td>'+date+'</td>';
     if(x.leave)return '<tr>'+dc+'<td class="lv" colspan="2">Leave</td><td class="dim">—</td>'+pen(null)+'</tr>';
@@ -894,7 +924,7 @@ function doLogout(msg){
   stopSync();clearEmp();
   var p=CL.ok&&CL.au&&S.role==='admin'?CL.m.signOut(CL.au):Promise.resolve();   /* an employee phone keeps its own anonymous id, so its QR link survives logout */
   if(CL.ok)useSide(CL.A);
-  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.holidays=[];S.holOpen=false;S.cfgOpen=false;
+  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.holidays=[];S.holOpen=false;S.todayOpen=false;S.cfgOpen=false;
   S.aprof=false;S.dh=null;S.sub=null;S.q='';S.cam=null;S.screen='start';render();
   if(msg)toast(msg);
   p.catch(function(){});
@@ -1048,6 +1078,15 @@ VIEWS.admin=function(){
     if(S.dh.id){var de=delById(S.dh.id);main=subTop(esc(de.name)+' · Deleted','dh-back')+'<div class="gut" style="padding-bottom:2px"><button class="btn sm" style="min-height:38px;width:100%" data-act="rs-do" data-id="'+de.id+'">Restore Employee</button></div>'+reportScreen(de);}
     else main=subTop('Delete History','dh-back')+'<div class="searchbar gut"><label class="srch"><span class="sr">Search deleted employee by name or ID</span>'+ic('search',18)+'<input id="search" class="inp" type="search" placeholder="Search by name or ID" value="'+esc(S.q)+'" autocomplete="off" enterkeyhint="search"></label></div>'+
       '<span class="hint gut">Records here are kept permanently and cannot be deleted.</span><div class="body gut" id="plist">'+dhListHTML()+'</div>';
+  }else if(S.aprof&&S.todayOpen){
+    var tk=dkeyD(new Date()),came=[];
+    S.emps.forEach(function(e){var u=dutiesOf(e).filter(function(x){return x.key===tk||x.open;}).pop();if(u)came.push({e:e,u:u});});
+    came.sort(function(a,b){return a.u.inMs-b.u.inMs;});
+    main=subTop('Today\'s Attendance','today-back')+'<div class="body gut">'+
+     '<span class="hint"><b>'+came.length+'</b> of '+S.emps.length+' employees came today.</span>'+
+     (came.length?'<ul class="list">'+came.map(function(c){
+       return '<li><div class="li hli"><span class="who"><b>'+esc(c.e.name)+'</b><small>'+esc(c.e.id)+' · In '+clockMs(c.u.inMs)+(c.u.open?' · Working now':(c.u.outMs?' · Out '+clockMs(c.u.outMs):''))+'</small></span></div></li>';
+     }).join('')+'</ul>':'<span class="hint">No one has punched in yet today.</span>')+'</div>';
   }else if(S.aprof&&S.holOpen){
     var DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],hs=(S.holidays||[]).slice().sort(function(a,b){return a.d<b.d?-1:1;});
     main=subTop('Holidays','hol-back')+'<div class="body gut">'+
@@ -1075,6 +1114,7 @@ VIEWS.admin=function(){
      '</div>'+
      '<div class="prow">'+ic('globe',20)+'<b>Language</b><span class="v">English</span></div>'+
      '<button class="prow" data-act="cfg-open">'+ic('clock',20)+'<b>Duty Settings</b></button>'+
+     '<button class="prow" data-act="today-open">'+ic('briefcase',20)+'<b>Today\'s Attendance</b></button>'+
      '<button class="prow" data-act="hol-open">'+ic('calendar',20)+'<b>Holidays</b></button>'+
      '<button class="prow" data-act="dh-open">'+ic('trash',20)+'<b>Delete Employee History</b></button>'+
      '<button class="prow" data-act="fb-open">'+ic('edit',20)+'<b>Send Feedback</b></button>'+
@@ -1222,11 +1262,13 @@ root.addEventListener('click',function(ev){
     case 'setup-save':
       if(!val('cname')){toast('Enter the company name');return;}
       S.company=val('cname');S.setupDone=true;saveCompany();S.screen='admin';S.tab='home';S.sub=null;S.aprof=false;S.q='';break;
-    case 'tab':S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.confirmAcct=false;S.pe=null;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
-    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;break;
-    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;break;
+    case 'tab':S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.confirmAcct=false;S.pe=null;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
+    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;break;
+    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;break;
+    case 'today-open':S.todayOpen=true;break;
+    case 'today-back':S.todayOpen=false;break;
     case 'hol-open':S.holOpen=true;break;
-    case 'hol-back':S.holOpen=false;break;
+    case 'hol-back':S.holOpen=false;S.todayOpen=false;break;
     case 'hol-add':
       var hd=val('hol-d'),hn=val('hol-n').slice(0,30);
       if(!/^\d{4}-\d{2}-\d{2}$/.test(hd)){toast('Pick the holiday date');return;}
