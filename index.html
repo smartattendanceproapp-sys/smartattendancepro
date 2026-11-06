@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap" media="print" onload="this.media='all'">
 <script src="firebase-config.js"></script>
 <script>
 window.FBP=window.FBP_MOCK||Promise.all([
@@ -20,8 +20,8 @@ window.FBP=window.FBP_MOCK||Promise.all([
   import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js')
 ]).then(function(a){return Object.assign({},a[0],a[1],a[2]);});
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
 /* Layout: full-screen app column (max 640px on wide screens). Home screens open with a deep-blue band; report screens split into a fixed summary on top and a scrolling Excel-style attendance table below. Boxes use a soft recessed edge on a light orange ground. The two entry screens carry the Smart Attendance Pro brand block. */
 :root{
@@ -72,6 +72,7 @@ window.FBP=window.FBP_MOCK||Promise.all([
 }
 *{box-sizing:border-box}
 html,body{height:100%}
+html{-webkit-tap-highlight-color:transparent}button,a,select,summary,[data-act]{touch-action:manipulation}
 body{margin:0;background:var(--frame);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.4}
 @media (min-width:700px){body{background:var(--bg)}}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--topfill)}
@@ -330,7 +331,7 @@ a.prow{color:inherit;text-decoration:none}
 <div id="app"></div>
 
 <script>
-(function(){var sp=document.getElementById("splash");setTimeout(function(){sp.className="out";setTimeout(function(){sp.remove()},600)},2000)})();
+(function(){var sp=document.getElementById("splash"),t0=Date.now(),gone=false;function go(){if(gone)return;gone=true;sp.className="out";setTimeout(function(){sp.remove()},500);}window.hideSplash=function(){setTimeout(go,Math.max(0,900-(Date.now()-t0)));};setTimeout(go,4500);})();
 (function(){
 var root=document.getElementById('app');
 var NOW=new Date(), TY=NOW.getFullYear(), TM=NOW.getMonth(), TD=NOW.getDate();
@@ -930,7 +931,7 @@ function boot(){
     if(u&&!u.isAnonymous)return adminLoad(u);
     S.screen='start';
   }).catch(function(err){console.error(err);S.screen='start';if(!finished)toast('Could not connect. Check internet.');}).then(function(){
-    if(finished)return;finished=true;clearTimeout(timer);render();
+    if(finished)return;finished=true;clearTimeout(timer);render();if(window.hideSplash)window.hideSplash();
   });
 }
 VIEWS.boot=function(){return '<div class="scr"><div class="body gut top narrow">'+brandHTML()+'<span class="hint">Loading…</span></div></div>';};
