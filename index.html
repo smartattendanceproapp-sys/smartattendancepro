@@ -2,6 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Smart Attendance Pro</title>
+<meta name="description" content="Smart Attendance Pro: QR attendance, accurate salary and simple PDF reports for your employees.">
 <meta name="theme-color" content="#1250C0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -328,7 +329,7 @@ a.prow{color:inherit;text-decoration:none}
 </style>
 
 <div id="splash"></div>
-<div id="app"></div>
+<main id="app"></main>
 
 <script>
 (function(){var sp=document.getElementById("splash"),t0=Date.now(),gone=false;function go(){if(gone)return;gone=true;sp.className="out";setTimeout(function(){sp.remove()},500);}window.hideSplash=function(){setTimeout(go,Math.max(0,900-(Date.now()-t0)));};setTimeout(go,4500);})();
@@ -517,12 +518,7 @@ function monthData(e,y,m){
     }
     if(r.open){if(r.w>=FULL)working+=1;return;}   /* a running duty counts only after its 8 h are complete */
     if(r.w>=FULL){working+=1;return;}
-    if(r.w>=HALF){
-      var need=FULL-r.w;
-      if(pool>=need){pool-=need;working+=1;}
-      else{working+=0.5;leave+=0.5;r.half=true;}
-      return;
-    }
+    if(r.w>=HALF){working+=0.5;leave+=0.5;r.half=true;return;}   /* a short day is a half day; overtime is never used to make it a full day */
     leave+=1;r.shortLeave=true;
   });
   var futureSun=0;
