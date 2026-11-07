@@ -326,6 +326,21 @@ a.prow{color:inherit;text-decoration:none}
 #offb{position:fixed;top:0;left:0;right:0;z-index:50;background:#8F5600;color:#fff;text-align:center;font:600 12px var(--body);padding:5px 10px}
 .toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));margin-inline:auto;max-width:420px;z-index:30;background:var(--ink);color:var(--frame);padding:11px 16px;border-radius:14px;font-weight:600;text-align:center}
 #splash{position:fixed;inset:0;z-index:999;background:url(splash.jpg) center/contain no-repeat,linear-gradient(#0A3FA0,#8FB4EE 50%,#0A3FA0);transition:opacity .45s}#splash.out{opacity:0;pointer-events:none}
+
+.slbtn{padding:6px 0 0}.slbtn .btn{width:100%}
+.slbody{padding-bottom:30px}
+.slip{background:#fff;color:#111;border-radius:6px;padding:10px 8px 8px;overflow-x:auto}
+.slco{text-align:center;margin-bottom:8px;display:flex;flex-direction:column;gap:2px}.slco b{font-size:17px}.slco span{font-size:12px;color:#333}
+.slt{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10.5px}
+.slt td{border:1.5px solid #111;padding:5px 4px;vertical-align:middle;word-wrap:break-word}
+.slt .r{text-align:right}.slt .c{text-align:center}.slt .sll{font-weight:700}.slt .slc{text-align:center}
+.slt .slh td{font-weight:800;background:#EEF2FA;font-size:9.5px}
+.slt .sig td{height:92px;vertical-align:bottom}
+.sin{width:100%;box-sizing:border-box;border:1px solid #9DB3E0;border-radius:5px;padding:4px 4px;font:inherit;font-size:11px;text-align:right;background:#F6F9FF;color:#111;min-height:28px}
+.sin.sm{width:42px;display:inline-block;padding:2px}
+.slv .sin{text-align:left}
+.chks{display:grid;grid-template-columns:1fr 1fr;gap:6px}.chk{display:flex;align-items:center;gap:8px;font-size:13px}
+.chk input{width:18px;height:18px}
 </style>
 
 <div id="splash"></div>
@@ -407,7 +422,7 @@ function migrate(e){
 }
 var KEY='payroll-demo-v2';
 var S={
-  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,pe:null,holOpen:false,todayOpen:false,holidays:[],role:null,dh:null,confirmDel:false,
+  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,pe:null,holOpen:false,todayOpen:false,slipOn:false,ssOpen:false,slips:{},addr:'',sc:{off:[],l:{c1:'',c2:'',d1:'',d2:''}},holidays:[],role:null,dh:null,confirmDel:false,
   tab:'home',sub:null,aprof:false,q:'',rm:TM,ry:TY,etab:'home',cam:null,meId:null,camId:0,form:{sun:'y',apply:'cur',otx:'1',sunw:'duty',starter:'old'}
 };
 function save(){}   /* data now lives in Firebase; Firestore keeps its own offline copy */
@@ -616,8 +631,174 @@ function historyHTML(e){
     '<div class="empty">No attendance recorded for this month.</div>';
   return '<section class="hist" aria-label="Attendance History"><div class="cap">'+esc(e.name)+'<small>'+e.id+'</small></div><div class="hscroll">'+table+'</div></section>';
 }
+
+/* ---------- salary slip ---------- */
+var SLIP_KEYS=[['des','Designation'],['pan','PAN'],['doj','Date of Joining'],['da','Dearness Allowance'],['hra','HRA'],['bon','Attendance Bonus'],['ot','OT Hour'],['esi','ESI'],['pt','PT'],['adv','Advance'],['advbal','Advance Balance'],['lv','Leave Deduction']];
+function normSc(v){
+  var o={off:[],l:{c1:'',c2:'',d1:'',d2:''}};
+  if(v&&Array.isArray(v.off))o.off=v.off.filter(function(k){return typeof k==='string';});
+  if(v&&v.l)['c1','c2','d1','d2'].forEach(function(k){o.l[k]=String(v.l[k]||'').slice(0,24);});
+  return o;
+}
+function watchSlips(e){
+  if(!CL.ok||!e||CL.unS[e.fid])return;
+  CL.unS[e.fid]=CL.m.onSnapshot(ccol(empPath(e.fid)+'/slips'),function(snap){
+    snap.forEach(function(d){var v=d.data();S.slips[e.fid+'|'+d.id]=v.f||{};});softRender();
+  },cloudErr);
+}
+function rs(n){return Math.round(n).toLocaleString('en-IN');}
+function numWords(n){
+  n=Math.round(n);if(n===0)return 'Zero';
+  var ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'],tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function two(x){return x<20?ones[x]:tens[Math.floor(x/10)]+(x%10?' '+ones[x%10]:'');}
+  function three(x){return (x>=100?ones[Math.floor(x/100)]+' Hundred'+(x%100?' ':''):'')+(x%100?two(x%100):'');}
+  var neg=n<0;n=Math.abs(n);var out=[],cr=Math.floor(n/10000000);n%=10000000;var lk=Math.floor(n/100000);n%=100000;var th=Math.floor(n/1000);n%=1000;
+  if(cr)out.push(three(cr)+' Crore');if(lk)out.push(two(lk)+' Lakh');if(th)out.push(two(th)+' Thousand');if(n)out.push(three(n));
+  return (neg?'Minus ':'')+out.join(' ');
+}
+function slipModel(e,y,m,fo){
+  var c=calc(e,y,m),f=fo||S.slips[e.fid+'|'+y+'-'+p2(m+1)]||{},sc=S.sc||normSc(null);
+  function has(k){return f[k]!==undefined&&f[k]!==null&&f[k]!=='';}
+  function nv(k,auto){return has(k)?(+f[k]||0):auto;}
+  function on(k){return sc.off.indexOf(k)<0;}
+  var basic=Math.max(c.r.salary,c.work),rate0=c.r.ot*(parseFloat(c.r.otx)||1);
+  var otH=nv('otH',c.otH),otR=nv('otR',rate0),otAmt=(has('otH')||has('otR'))?Math.round(otH*otR):c.otAmt;
+  var M={e:e,y:y,m:m,f:f,sc:sc,c:c,basic:basic,otH:otH,otR:otR,otAmt:otAmt};
+  var autoLv=basic-c.work;
+  M.da=on('da')?nv('da',0):0;M.hra=on('hra')?nv('hra',0):0;M.bon=on('bon')?nv('bon',c.added):0;M.ot=on('ot')?otAmt:0;
+  M.c1=sc.l.c1?nv('c1',0):0;M.c2=sc.l.c2?nv('c2',0):0;
+  M.esi=on('esi')?nv('esi',0):0;M.pt=on('pt')?nv('pt',0):0;M.adv=on('adv')?nv('adv',0):0;M.advbal=on('advbal')?nv('advbal',0):0;
+  M.lv=on('lv')?nv('lv',autoLv):0;M.d1=sc.l.d1?nv('d1',0):0;M.d2=sc.l.d2?nv('d2',0):0;
+  M.total=basic+M.da+M.hra+M.bon+M.ot+M.c1+M.c2;
+  M.ded=M.esi+M.pt+M.adv+M.lv+M.d1+M.d2;
+  M.net=M.total-M.ded;
+  M.words='Rupees '+numWords(M.net)+' Only';
+  M.autoLv=autoLv;M.autoBon=c.added;M.autoOtH=c.otH;M.autoOtR=rate0;
+  M.dim=new Date(y,m+1,0).getDate();
+  M.title='Pay Slip for the month of '+MONTHS[m].toUpperCase()+'-'+y;
+  M.date=dkText(Date.now());
+  M.doj=e.createdAt?dkText(e.createdAt):'';
+  M.on=on;
+  var S1=function(k,l,v,ed,auto,txt){return {k:k,l:l,v:v,ed:ed,auto:auto,txt:txt};};
+  M.earn=[S1('basic','BASIC SALARY',basic,false)];
+  if(on('da'))M.earn.push(S1('da','DEARNESS ALLOWANCE',M.da,true,0));
+  if(on('hra'))M.earn.push(S1('hra','HRA',M.hra,true,0));
+  if(on('bon'))M.earn.push(S1('bon','ATTENDANCE BONUS',M.bon,true,c.added));
+  if(on('ot'))M.earn.push(S1('ot','OT HOUR:-'+nf(otH)+'*'+nf(otR),M.ot,false));
+  if(sc.l.c1)M.earn.push(S1('c1',sc.l.c1.toUpperCase(),M.c1,true,0));
+  if(sc.l.c2)M.earn.push(S1('c2',sc.l.c2.toUpperCase(),M.c2,true,0));
+  M.dd=[];
+  if(on('esi'))M.dd.push(S1('esi','ESI',M.esi,true,0));
+  if(on('adv'))M.dd.push(S1('adv','ADVANCE',M.adv,true,0));
+  if(on('pt'))M.dd.push(S1('pt','PT',M.pt,true,0));
+  if(on('advbal'))M.dd.push(S1('advbal','ADVANCE BALANCE',M.advbal,true,0));
+  if(on('lv'))M.dd.push(S1('lv','LEAVE DEDUCTION',M.lv,true,autoLv));
+  if(sc.l.d1)M.dd.push(S1('d1',sc.l.d1.toUpperCase(),M.d1,true,0));
+  if(sc.l.d2)M.dd.push(S1('d2',sc.l.d2.toUpperCase(),M.d2,true,0));
+  var des=has('des')?String(f.des):'',pan=has('pan')?String(f.pan):'';
+  M.info=[
+    [['EMPLOYEE NAME',e.name],on('doj')?['DATE OF JOINING',M.doj]:['','']],
+    [['EMPLOYEE CODE',e.id],['TOTAL WORKING DAYS',String(M.dim)]],
+    [on('des')?['DESIGNATION',des,'des']:['',''],['NUMBER OF WORKING DAYS ATTEND',nf(c.d.working)]],
+    [on('pan')?['PAN',pan,'pan']:['',''],['LEAVE',nf(c.d.leave)]]
+  ];
+  return M;
+}
+/* the slip on the screen: a read-only grid for employees, the same grid with boxes to fill for the admin */
+function slipHTML(e,y,m,edit){
+  var M=slipModel(e,y,m),f=M.f,addr=String(S.addr||'').split('\n').filter(function(x){return x.trim();});
+  function box(k,auto,txt){
+    var v=(f[k]===undefined||f[k]===null)?'':f[k];
+    return '<input class="sin" data-k="'+k+'" '+(txt?'type="text" maxlength="30"':'type="number" inputmode="decimal" min="0"')+' value="'+esc(v)+'" placeholder="'+(txt?'':rs(auto||0))+'" aria-label="'+k+'">';
+  }
+  var h='<div class="slip" id="slip"><div class="slco"><b>'+esc(S.company)+'</b>'+addr.map(function(a){return '<span>'+esc(a)+'</span>';}).join('')+'</div><table class="slt"><colgroup><col style="width:28%"><col style="width:19%"><col style="width:29%"><col style="width:24%"></colgroup>';
+  h+='<tr><td colspan="3" class="slc"><b>'+esc(M.title)+'</b></td><td class="slc">DATE:- '+M.date+'</td></tr>';
+  M.info.forEach(function(r){
+    h+='<tr>'+r.map(function(p){
+      var val=(edit&&p[2])?box(p[2],0,true):esc(p[1]);
+      return '<td class="sll">'+p[0]+'</td><td class="slv">'+val+'</td>';
+    }).join('')+'</tr>';
+  });
+  h+='<tr class="slh"><td>INCOME PARTICULAR</td><td class="r">AMOUNT</td><td>PARTICULAR</td><td class="r">DEDUCTION AMOUNT</td></tr>';
+  var n=Math.max(M.earn.length,M.dd.length);
+  for(var i=0;i<n;i++){
+    var a=M.earn[i],d=M.dd[i],la='',va='',ld='',vd='';
+    if(a){
+      if(a.k==='ot'&&edit)la='OT HOUR:- <input class="sin sm" data-k="otH" type="number" inputmode="decimal" min="0" value="'+esc(f.otH==null?'':f.otH)+'" placeholder="'+nf(M.autoOtH)+'" aria-label="OT hours">*<input class="sin sm" data-k="otR" type="number" inputmode="decimal" min="0" value="'+esc(f.otR==null?'':f.otR)+'" placeholder="'+nf(M.autoOtR)+'" aria-label="OT rate">';
+      else la=esc(a.l);
+      va=(edit&&a.ed)?box(a.k,a.auto):'<span id="sl-v-'+a.k+'">'+rs(a.v)+'</span>';
+    }
+    if(d){ld=esc(d.l);vd=(edit&&d.ed)?box(d.k,d.auto):'<span>'+rs(d.v)+'</span>';}
+    h+='<tr><td class="sll">'+la+'</td><td class="r">'+va+'</td><td class="sll">'+ld+'</td><td class="r">'+vd+'</td></tr>';
+  }
+  h+='<tr class="slh"><td>TOTAL</td><td class="r" id="sl-total">'+rs(M.total)+'</td><td>TOTAL DEDUCTION</td><td class="r" id="sl-ded">'+rs(M.ded)+'</td></tr>';
+  h+='<tr class="slh"><td colspan="3" class="c">NET PAYMENT</td><td class="r" id="sl-net">'+rs(M.net)+'</td></tr>';
+  h+='<tr><td colspan="4" class="sll">IN WORDS:- <span id="sl-words">'+esc(M.words)+'</span></td></tr>';
+  h+='<tr class="sig"><td colspan="2" class="sll">AUTHORISED SEAL/SIGN</td><td colspan="2" class="sll">EMPLOYEE SIGNATURE</td></tr></table></div>';
+  return h;
+}
+function slipScreen(e,admin){
+  var mo=slipHTML(e,S.ry,S.rm,admin);
+  return subTop('Salary Slip','slip-back')+selectsHTML('slip')+'<div class="body gut slbody">'+mo+
+   (admin?'<span class="hint">Leave a box empty to use the automatic amount. OT, bonus and leave deduction come from the attendance.</span><button class="btn" data-act="slip-save">Save Salary Slip</button>':'')+'</div>';
+}
+function slipForm(){
+  var f={};[].forEach.call(root.querySelectorAll('.sin[data-k]'),function(el){
+    var v=el.value.trim();if(v==='')return;f[el.dataset.k]=(el.type==='number')?Math.max(0,parseFloat(v)||0):v.slice(0,30);
+  });
+  return f;
+}
+function slipTarget(){return S.role==='emp'?me():byId(S.sub&&S.sub.id);}
+function refreshSlip(){
+  var e=slipTarget();if(!e)return;
+  var M=slipModel(e,S.ry,S.rm,slipForm());
+  function set(id,t){var el=document.getElementById(id);if(el)el.textContent=t;}
+  set('sl-total',rs(M.total));set('sl-ded',rs(M.ded));set('sl-net',rs(M.net));set('sl-words',M.words);
+  M.earn.forEach(function(a){if(a.k==='ot')set('sl-v-ot',rs(a.v));});
+}
+function pdfSlip(e,y,m){
+  var M=slipModel(e,y,m),W=1240,H=1754,Mg=70,TW=W-2*Mg,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  var x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  var cw=[Math.round(TW*.26),Math.round(TW*.16),Math.round(TW*.36)];cw.push(TW-cw[0]-cw[1]-cw[2]);
+  var INK='#111',LN='#111',y0=Mg;
+  function txt(t,px,py,font,al,col){x.font=font;x.textAlign=al||'left';x.fillStyle=col||INK;x.textBaseline='middle';x.fillText(t,px,py);}
+  function fit(t,w,font){x.font=font;var s=String(t);while(x.measureText(s).width>w-16&&s.length>2)s=s.slice(0,-2);return s;}
+  txt(M.title&&S.company,W/2,y0+22,'800 40px sans-serif','center');y0+=48;
+  String(S.addr||'').split('\n').filter(function(a){return a.trim();}).forEach(function(a){txt(a.trim(),W/2,y0+14,'500 24px sans-serif','center','#333');y0+=32;});
+  y0+=18;
+  var ys=y0;
+  function row(h,cells,bold,fill){   /* cells: [{c0,span,t,al,b}] */
+    var cx=Mg;
+    cells.forEach(function(c){
+      var w=0,i;for(i=c.i;i<c.i+(c.span||1);i++)w+=cw[i];
+      if(fill){x.fillStyle=fill;x.fillRect(cx,y0,w,h);}
+      x.strokeStyle=LN;x.lineWidth=2;x.strokeRect(cx,y0,w,h);
+      var f=(c.b||bold?'700 ':'500 ')+'20px sans-serif',t=fit(c.t==null?'':c.t,w,f);
+      txt(t,c.al==='r'?cx+w-10:(c.al==='c'?cx+w/2:cx+10),y0+h/2+1,f,c.al==='r'?'right':(c.al==='c'?'center':'left'));
+      cx+=w;
+    });
+    y0+=h;
+  }
+  row(52,[{i:0,span:3,t:M.title,al:'c',b:1},{i:3,t:'DATE:- '+M.date,b:0}],false);
+  M.info.forEach(function(r){row(52,[{i:0,t:r[0][0],b:1},{i:1,t:r[0][1]},{i:2,t:r[1][0],b:1},{i:3,t:r[1][1]}]);});
+  row(52,[{i:0,t:'INCOME PARTICULAR',b:1},{i:1,t:'AMOUNT',al:'r',b:1},{i:2,t:'PARTICULAR',b:1},{i:3,t:'DEDUCTION AMOUNT',al:'r',b:1}],true,'#EEF2FA');
+  var n=Math.max(M.earn.length,M.dd.length);
+  for(var i=0;i<n;i++){var a=M.earn[i],d=M.dd[i];
+    row(52,[{i:0,t:a?a.l:'',b:1},{i:1,t:a?rs(a.v):'',al:'r'},{i:2,t:d?d.l:'',b:1},{i:3,t:d?rs(d.v):'',al:'r'}]);}
+  row(52,[{i:0,t:'TOTAL',b:1},{i:1,t:rs(M.total),al:'r',b:1},{i:2,t:'TOTAL DEDUCTION',b:1},{i:3,t:rs(M.ded),al:'r',b:1}],true,'#EEF2FA');
+  row(56,[{i:0,span:3,t:'NET PAYMENT',al:'c',b:1},{i:3,t:rs(M.net),al:'r',b:1}],true,'#FFF3B0');
+  row(56,[{i:0,span:4,t:'IN WORDS:-  '+M.words,b:1}]);
+  row(190,[{i:0,span:2,t:'AUTHORISED SEAL/SIGN',b:1},{i:2,span:2,t:'EMPLOYEE SIGNATURE',b:1}]);
+  /* labels of the signature boxes sit at the bottom */
+  x.fillStyle='#fff';x.fillRect(Mg+2,y0-190+2,TW-4,190-4);
+  x.strokeStyle=LN;x.lineWidth=2;x.strokeRect(Mg,y0-190,cw[0]+cw[1],190);x.strokeRect(Mg+cw[0]+cw[1],y0-190,cw[2]+cw[3],190);
+  txt('AUTHORISED SEAL/SIGN',Mg+10,y0-26,'700 22px sans-serif');txt('EMPLOYEE SIGNATURE',Mg+cw[0]+cw[1]+10,y0-26,'700 22px sans-serif');
+  var jpg=cv.toDataURL('image/jpeg',.92).split(',')[1],bin=atob(jpg),u=new Uint8Array(bin.length);
+  for(var k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);
+  return makePdf([u],W,H,false);
+}
 function reportScreen(e){
-  return '<div class="rep">'+selectsHTML('one')+summaryHTML(e,S.ry,S.rm)+'<div class="histwrap gut">'+historyHTML(e)+'</div></div>';
+  return '<div class="rep">'+selectsHTML('one')+(S.role==='admin'?'<div class="gut slbtn"><button class="btn sm sec" data-act="slip-open">'+ic('report',18)+'Salary Slip</button></div>':'')+summaryHTML(e,S.ry,S.rm)+'<div class="histwrap gut">'+historyHTML(e)+'</div></div>';
 }
 function navHTML(items,cur,act){
   return '<nav class="nav" aria-label="Main"><div class="navin gut">'+items.map(function(it){
@@ -809,7 +990,7 @@ function kpiBtn(act,lbl,n,cls){
 /* ---------- screens ---------- */
 var VIEWS={};
 /* ---------- cloud (Firebase) ---------- */
-var CL={m:null,db:null,au:null,uid:null,cid:null,ok:false,unE:null,unC:null,unP:{}};
+var CL={m:null,db:null,au:null,uid:null,cid:null,ok:false,unE:null,unC:null,unP:{},unS:{}};
 function randId(){var a=new Uint8Array(15),o='';window.crypto.getRandomValues(a);for(var i=0;i<a.length;i++)o+=('0'+a[i].toString(16)).slice(-2);return o;}
 function cloudErr(err){console.error(err);toast('Could not sync. Check internet.');}
 function cdoc(path){return CL.m.doc(CL.db,path);}
@@ -817,15 +998,16 @@ function ccol(path){return CL.m.collection(CL.db,path);}
 function empPath(fid){return 'companies/'+CL.cid+'/employees/'+fid;}
 function empDoc(e){return {id:e.id,name:e.name,cur:e.cur,prev:e.prev||null,next:e.next||null,sunPaid:e.sunPaid!==false,status:e.delAt?'deleted':'active',starter:e.starter||'old',delAt:e.delAt||null,gaps:e.gaps||[],createdAt:e.createdAt||Date.now()};}
 function saveEmp(e){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc(empPath(e.fid)),empDoc(e),{merge:true}).catch(cloudErr);}
-function saveCompany(){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc('companies/'+CL.cid),{ownerUid:CL.uid,name:S.company,logo:S.logo||null,nextNum:S.nextNum,cfgStart:S.cfg.start||'',cfgLunch:+S.cfg.lunch||0,cfgGrace:+S.cfg.grace,holidays:S.holidays||[]},{merge:true}).catch(cloudErr);}
+function saveCompany(){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc('companies/'+CL.cid),{ownerUid:CL.uid,name:S.company,logo:S.logo||null,nextNum:S.nextNum,cfgStart:S.cfg.start||'',cfgLunch:+S.cfg.lunch||0,cfgGrace:+S.cfg.grace,holidays:S.holidays||[],addr:S.addr||'',slipCfg:S.sc},{merge:true}).catch(cloudErr);}
 function savePunch(e,s){if(!CL.ok)return;if(!s.id)s.id=String(s.i);var r=cdoc(empPath(e.fid)+'/punches/'+s.id);(s.o==null?CL.m.setDoc(r,{i:s.i,o:null}):CL.m.updateDoc(r,{o:s.o})).catch(cloudErr);}
-function applyCfg(v){S.holidays=Array.isArray(v.holidays)?v.holidays:[];S.cfg={start:v.cfgStart||'',lunch:+v.cfgLunch||0,grace:v.cfgGrace==null?10:+v.cfgGrace};}
+function applyCfg(v){S.addr=v.addr||'';S.sc=normSc(v.slipCfg);S.holidays=Array.isArray(v.holidays)?v.holidays:[];S.cfg={start:v.cfgStart||'',lunch:+v.cfgLunch||0,grace:v.cfgGrace==null?10:+v.cfgGrace};}
 function nextNumber(){var mx=S.nextNum-1;S.emps.concat(S.deleted).forEach(function(e){var n=parseInt(String(e.id).slice(3),10);if(n>mx)mx=n;});return mx+1;}
 /* a snapshot can arrive while someone is typing: never rebuild the screen under their fingers */
 function softRender(){var a=document.activeElement;if(a&&root.contains(a)&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))return;render();}
 function stopSync(){
   if(CL.unE){CL.unE();CL.unE=null;}if(CL.unC){CL.unC();CL.unC=null;}
   Object.keys(CL.unP).forEach(function(k){CL.unP[k]();});CL.unP={};
+  Object.keys(CL.unS).forEach(function(k){CL.unS[k]();});CL.unS={};
 }
 function watchPunches(e){
   if(CL.unP[e.fid])return;
@@ -924,7 +1106,7 @@ function doLogout(msg){
   stopSync();clearEmp();
   var p=CL.ok&&CL.au&&S.role==='admin'?CL.m.signOut(CL.au):Promise.resolve();   /* an employee phone keeps its own anonymous id, so its QR link survives logout */
   if(CL.ok)useSide(CL.A);
-  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.holidays=[];S.holOpen=false;S.todayOpen=false;S.cfgOpen=false;
+  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.holidays=[];S.addr='';S.sc=normSc(null);S.slips={};S.slipOn=false;S.ssOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.cfgOpen=false;
   S.aprof=false;S.dh=null;S.sub=null;S.q='';S.cam=null;S.screen='start';render();
   if(msg)toast(msg);
   p.catch(function(){});
@@ -1087,6 +1269,16 @@ VIEWS.admin=function(){
      (came.length?'<ul class="list">'+came.map(function(c){
        return '<li><div class="li hli"><span class="who"><b>'+esc(c.e.name)+'</b><small>'+esc(c.e.id)+' · In '+clockMs(c.u.inMs)+(c.u.open?' · Working now':(c.u.outMs?' · Out '+clockMs(c.u.outMs):''))+'</small></span></div></li>';
      }).join('')+'</ul>':'<span class="hint">No one has punched in yet today.</span>')+'</div>';
+  }else if(S.aprof&&S.ssOpen){
+    var sc=S.sc||normSc(null);
+    main=subTop('Salary Slip Settings','ss-back')+'<div class="body gut">'+
+     '<div class="field"><label for="ss-addr">Company Address <i>(shown under the company name)</i></label><textarea class="inp" id="ss-addr" maxlength="200" placeholder="Street, city, state, PIN">'+esc(S.addr||'')+'</textarea></div>'+
+     '<div class="field"><span class="lab">Show on the slip</span><div class="chks">'+SLIP_KEYS.map(function(k){return '<label class="chk"><input type="checkbox" id="ss-k-'+k[0]+'"'+(sc.off.indexOf(k[0])<0?' checked':'')+'><span>'+k[1]+'</span></label>';}).join('')+'</div></div>'+
+     '<div class="field"><span class="lab">Extra lines <i>(optional)</i></span>'+
+     '<input class="inp" id="ss-c1" maxlength="24" placeholder="Extra income 1 (e.g. Conveyance)" value="'+esc(sc.l.c1)+'"><input class="inp" id="ss-c2" maxlength="24" placeholder="Extra income 2" value="'+esc(sc.l.c2)+'">'+
+     '<input class="inp" id="ss-d1" maxlength="24" placeholder="Extra deduction 1 (e.g. Canteen)" value="'+esc(sc.l.d1)+'"><input class="inp" id="ss-d2" maxlength="24" placeholder="Extra deduction 2" value="'+esc(sc.l.d2)+'"></div>'+
+     '<span class="hint">An extra line appears on the slip only when it has a name. Amounts are filled in on each employee\'s slip.</span>'+
+     '<button class="btn" data-act="ss-save">Save</button></div>';
   }else if(S.aprof&&S.holOpen){
     var DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],hs=(S.holidays||[]).slice().sort(function(a,b){return a.d<b.d?-1:1;});
     main=subTop('Holidays','hol-back')+'<div class="body gut">'+
@@ -1114,6 +1306,7 @@ VIEWS.admin=function(){
      '</div>'+
      '<div class="prow">'+ic('globe',20)+'<b>Language</b><span class="v">English</span></div>'+
      '<button class="prow" data-act="cfg-open">'+ic('clock',20)+'<b>Duty Settings</b></button>'+
+     '<button class="prow" data-act="ss-open">'+ic('report',20)+'<b>Salary Slip Settings</b></button>'+
      '<button class="prow" data-act="today-open">'+ic('briefcase',20)+'<b>Today\'s Attendance</b></button>'+
      '<button class="prow" data-act="hol-open">'+ic('calendar',20)+'<b>Holidays</b></button>'+
      '<button class="prow" data-act="dh-open">'+ic('trash',20)+'<b>Delete Employee History</b></button>'+
@@ -1146,6 +1339,7 @@ VIEWS.admin=function(){
     }
   }else if(S.tab==='reports'){
     if(!sub)main=searchList('Reports',selectsHTML('all'));
+    else if(S.slipOn)main=slipScreen(byId(sub.id),true);
     else main=reportScreen(byId(sub.id));
   }else if(S.tab==='update'){
     if(!sub)main=searchList('Update Employee');
@@ -1182,9 +1376,12 @@ VIEWS.emp=function(){
       '<div class="scrollbody">'+summaryHTML(e,TY,TM,true)+'</div>';
   }else if(S.etab==='report'){
     main=reportScreen(e);
+  }else if(S.slipOn){
+    main=slipScreen(e,false);
   }else{
     main='<div class="body gut" style="padding-top:28px"><div class="hbox pbox"><div class="hco">'+(S.logo?logoHTML():'')+'<b>'+esc(S.company)+'</b></div>'+
      '<div class="pcard"><b>'+esc(e.name)+'</b><span>'+e.id+'</span></div></div>'+
+     '<button class="prow" data-act="slip-open" style="margin-top:12px">'+ic('report',20)+'<b>Salary Slip</b></button>'+
      '<button class="prow out" data-act="logout" style="margin-top:12px">'+ic('logout',20)+'<b>Logout</b></button></div>';
   }
   return '<div class="scr">'+main+'</div>'+navHTML(ENAV,S.etab,'etab');
@@ -1262,13 +1459,28 @@ root.addEventListener('click',function(ev){
     case 'setup-save':
       if(!val('cname')){toast('Enter the company name');return;}
       S.company=val('cname');S.setupDone=true;saveCompany();S.screen='admin';S.tab='home';S.sub=null;S.aprof=false;S.q='';break;
-    case 'tab':S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.confirmAcct=false;S.pe=null;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
-    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;break;
-    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;break;
+    case 'tab':S.slipOn=false;S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.confirmAcct=false;S.pe=null;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
+    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;break;
+    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;break;
+    case 'slip-open':S.slipOn=true;watchSlips(slipTarget());break;
+    case 'slip-back':S.slipOn=false;break;
+    case 'slip-save':{
+      var se=slipTarget();if(!se||S.role!=='admin')return;
+      var sf=slipForm(),sk=se.fid+'|'+S.ry+'-'+p2(S.rm+1);S.slips[sk]=sf;
+      if(CL.ok)CL.m.setDoc(cdoc(empPath(se.fid)+'/slips/'+S.ry+'-'+p2(S.rm+1)),{f:sf,at:Date.now()}).catch(cloudErr);
+      msg='Salary slip saved';break;}
+    case 'slip-pdf':{var pe0=slipTarget();if(pe0)dlBlob('SalarySlip-'+fname(pe0.name+'-'+pe0.id)+'-'+fname(MONTHS[S.rm]+'-'+S.ry)+'.pdf',pdfSlip(pe0,S.ry,S.rm));return;}
+    case 'ss-open':S.ssOpen=true;break;
+    case 'ss-back':S.ssOpen=false;break;
+    case 'ss-save':{
+      var nsc={off:[],l:{c1:val('ss-c1'),c2:val('ss-c2'),d1:val('ss-d1'),d2:val('ss-d2')}};
+      SLIP_KEYS.forEach(function(k){var cb=document.getElementById('ss-k-'+k[0]);if(cb&&!cb.checked)nsc.off.push(k[0]);});
+      S.sc=normSc(nsc);S.addr=(document.getElementById('ss-addr')||{value:''}).value.trim().slice(0,200);
+      saveCompany();msg='Salary slip settings saved';break;}
     case 'today-open':S.todayOpen=true;break;
     case 'today-back':S.todayOpen=false;break;
     case 'hol-open':S.holOpen=true;break;
-    case 'hol-back':S.holOpen=false;S.todayOpen=false;break;
+    case 'hol-back':S.holOpen=false;S.todayOpen=false;S.ssOpen=false;break;
     case 'hol-add':
       var hd=val('hol-d'),hn=val('hol-n').slice(0,30);
       if(!/^\d{4}-\d{2}-\d{2}$/.test(hd)){toast('Pick the holiday date');return;}
@@ -1307,7 +1519,7 @@ root.addEventListener('click',function(ev){
       S.confirmDel=false;msg='Employee deleted · saved in Delete History';break;
     case 'total':case 'active':case 'leave':S.sub={t:a};break;
     case 'add':S.form.sun='y';S.form.starter='old';S.form.otx='1';S.form.sunw='duty';S.sub={t:'add'};break;
-    case 'back':S.sub=null;S.confirmDel=false;break;
+    case 'back':S.sub=null;S.confirmDel=false;S.slipOn=false;break;
     case 'noop':return;
     case 'pick':S.confirmDel=false;S.form.apply='cur';(function(x){S.form.otx=(x&&x.cur.otx)||'1';S.form.sunw=(x&&x.cur.sunw)||'duty';})(byId(id));S.sub={t:S.tab,id:id};S.rm=TM;S.ry=TY;break;
     case 'logout':doLogout();return;
@@ -1360,7 +1572,7 @@ root.addEventListener('click',function(ev){
       });
       S.pe=null;msg='Time updated';break;
     case 'qr-do':qrAction(b.dataset.w,byId(S.sub&&S.sub.id));return;
-    case 'etab':S.etab=b.dataset.t;S.rm=TM;S.ry=TY;break;
+    case 'etab':S.slipOn=false;S.etab=b.dataset.t;S.rm=TM;S.ry=TY;break;
     case 'soon':msg='Available in the next phase';break;
     case 'cam':openCam();return;
     case 'cam-close':S.cam=null;break;
@@ -1378,6 +1590,7 @@ root.addEventListener('keydown',function(ev){
   if(t.id!=='search'&&nx)nx.focus();else t.blur();
 });
 root.addEventListener('input',function(ev){
+  if(ev.target.classList&&ev.target.classList.contains('sin')){refreshSlip();return;}
   if(ev.target.id==='search'){
     S.q=ev.target.value;
     var l=document.getElementById('plist');
