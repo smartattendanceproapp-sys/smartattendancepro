@@ -1,23 +1,29 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Privacy Policy · Smart Attendance Pro</title>
-<style>body{font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:760px;margin:0 auto;padding:20px;color:#0E1A33;background:#F5F8FE}h1{font-size:24px}h2{font-size:18px;margin-top:26px;color:#1456C8}li{margin:4px 0}.hi{background:#fff;border-radius:12px;padding:12px 16px;margin-top:28px}</style></head>
+<style>body{font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans Devanagari",sans-serif;max-width:760px;margin:0 auto;padding:20px;color:#0E1A33;background:#F5F8FE}h1{font-size:24px}h2{font-size:18px;margin-top:26px;color:#1456C8}li{margin:4px 0}.hi{display:none}.lg{margin:0 0 14px}.lg a{display:inline-block;padding:6px 14px;border-radius:20px;border:1px solid #1456C8;color:#1456C8;text-decoration:none;font-size:14px;margin-right:6px}.lg a.on{background:#1456C8;color:#fff}body.h .en{display:none}body.h .hi{display:block}</style></head>
 <body>
+<p class="lg"><a id="le" href="?lang=en">English</a><a id="lh" href="?lang=hi">हिन्दी</a></p>
+
+<div class="en">
 <h1>Smart Attendance Pro – Privacy Policy</h1>
 <p>Smart Attendance Pro helps a company record employee attendance and calculate salary. This page explains what the app stores and how it is used.</p>
 
 <h2>What we store</h2>
 <ul>
-<li><b>Admin:</b> the Google account email and name used to sign in, the company name and logo.</li>
-<li><b>Employees (added by the admin):</b> name, employee ID, category, salary, overtime rate, bonus and Sunday settings.</li>
+<li><b>Admin:</b> the Google account email and name used to sign in, the company name, logo and address.</li>
+<li><b>Employees (added by the admin):</b> name, employee ID, category, salary, overtime rate, bonus and Sunday settings, and the salary slip details the admin fills in.</li>
 <li><b>Attendance:</b> the date and time of each punch in and punch out.</li>
 <li><b>Phone link:</b> an anonymous technical ID that ties an employee's QR code to one phone, so nobody else can use it.</li>
 <li><b>Feedback:</b> the message you choose to send us, with your company name and email.</li>
 </ul>
 
+<h2>Location</h2>
+<p>If the admin turns on <b>Punch Location</b>, the app asks for the phone's location only at the moment an employee punches, to check that the employee is near the workplace. Your location is used for this check only. It is <b>not stored</b>, not tracked in the background and not shared. If the admin has not turned this on, location is never used.</p>
+
 <h2>What we do not do</h2>
 <ul>
-<li>We do not collect location (GPS), contacts, photos or any other phone data. The camera is used only to scan QR codes.</li>
+<li>We do not track you, and we do not collect contacts, photos or any other phone data. The camera is used only to scan QR codes.</li>
 <li>We do not show ads, and we do not sell or share your data with anyone.</li>
 </ul>
 
@@ -25,14 +31,56 @@
 <p>Data is stored in Google Firebase (Firestore) and protected by security rules. An admin can see only their own company. An employee can see only their own record. Data travels over encrypted connections.</p>
 
 <h2>Who can see it</h2>
-<p>The admin sees the employees and attendance of their own company. Each employee sees only their own attendance and salary summary.</p>
+<p>The admin sees the employees and attendance of their own company. Each employee sees only their own attendance, salary summary and salary slip.</p>
 
 <h2>Keeping and deleting data</h2>
 <p>Company records are kept safely so that nothing is lost by mistake. Deleting an employee keeps their record in Delete History for the admin, who can restore it. To have your company data erased, send a request through <b>Profile → Send Feedback</b> inside the app.</p>
 
 <h2>Contact</h2>
 <p>For questions or requests, use <b>Profile → Send Feedback</b> inside the app.</p>
-
-
 <p style="color:#51607E;font-size:13px">Last updated: November 2026</p>
+</div>
+
+<div class="hi">
+<h1>स्मार्ट अटेंडेंस प्रो – गोपनीयता नीति</h1>
+<p>स्मार्ट अटेंडेंस प्रो कंपनी को कर्मचारियों की हाज़िरी दर्ज करने और वेतन निकालने में मदद करता है। इस पेज में बताया गया है कि ऐप क्या जानकारी रखता है और उसका उपयोग कैसे होता है।</p>
+
+<h2>हम क्या जानकारी रखते हैं</h2>
+<ul>
+<li><b>एडमिन:</b> साइन इन में इस्तेमाल हुआ Google अकाउंट का ईमेल और नाम, कंपनी का नाम, लोगो और पता।</li>
+<li><b>कर्मचारी (एडमिन द्वारा जोड़े गए):</b> नाम, कर्मचारी ID, श्रेणी, वेतन, OT दर, बोनस और रविवार की सेटिंग, तथा एडमिन द्वारा भरी गई वेतन पर्ची की जानकारी।</li>
+<li><b>हाज़िरी:</b> हर पंच इन और पंच आउट की तारीख़ और समय।</li>
+<li><b>फ़ोन का जुड़ाव:</b> एक गुमनाम तकनीकी ID, जो कर्मचारी के QR कोड को एक फ़ोन से जोड़ती है ताकि कोई और उसे इस्तेमाल न कर सके।</li>
+<li><b>सुझाव:</b> वह संदेश जो आप हमें भेजना चुनते हैं, आपकी कंपनी के नाम और ईमेल के साथ।</li>
+</ul>
+
+<h2>लोकेशन (जगह)</h2>
+<p>अगर एडमिन <b>पंच की जगह</b> चालू करता है, तो ऐप सिर्फ़ उसी पल फ़ोन की लोकेशन माँगता है जब कर्मचारी पंच करता है, ताकि जाँचा जा सके कि कर्मचारी काम की जगह के पास है या नहीं। आपकी लोकेशन सिर्फ़ इसी जाँच के लिए इस्तेमाल होती है। वह <b>सेव नहीं की जाती</b>, बैकग्राउंड में ट्रैक नहीं होती और किसी को दी नहीं जाती। अगर एडमिन ने इसे चालू नहीं किया है, तो लोकेशन कभी इस्तेमाल नहीं होती।</p>
+
+<h2>हम क्या नहीं करते</h2>
+<ul>
+<li>हम आपको ट्रैक नहीं करते, और कॉन्टैक्ट, फ़ोटो या फ़ोन का कोई और डेटा नहीं लेते। कैमरा सिर्फ़ QR कोड स्कैन करने के लिए इस्तेमाल होता है।</li>
+<li>हम विज्ञापन नहीं दिखाते, और आपका डेटा किसी को बेचते या साझा नहीं करते।</li>
+</ul>
+
+<h2>डेटा कहाँ रखा जाता है</h2>
+<p>डेटा Google Firebase (Firestore) में रखा जाता है और सुरक्षा नियमों से सुरक्षित है। एडमिन सिर्फ़ अपनी कंपनी का डेटा देख सकता है। कर्मचारी सिर्फ़ अपना रिकॉर्ड देख सकता है। डेटा एन्क्रिप्टेड कनेक्शन से भेजा जाता है।</p>
+
+<h2>कौन देख सकता है</h2>
+<p>एडमिन अपनी कंपनी के कर्मचारियों और उनकी हाज़िरी को देखता है। हर कर्मचारी सिर्फ़ अपनी हाज़िरी, वेतन सारांश और वेतन पर्ची देखता है।</p>
+
+<h2>डेटा रखना और हटाना</h2>
+<p>कंपनी के रिकॉर्ड सुरक्षित रखे जाते हैं ताकि गलती से कुछ खो न जाए। किसी कर्मचारी को हटाने पर उसका रिकॉर्ड एडमिन के लिए "हटाया गया इतिहास" में रहता है, जहाँ से उसे वापस जोड़ा जा सकता है। अपनी कंपनी का डेटा मिटवाने के लिए ऐप के अंदर <b>प्रोफ़ाइल → सुझाव भेजें</b> से अनुरोध भेजें।</p>
+
+<h2>संपर्क</h2>
+<p>सवाल या अनुरोध के लिए ऐप के अंदर <b>प्रोफ़ाइल → सुझाव भेजें</b> का उपयोग करें।</p>
+<p style="color:#51607E;font-size:13px">आख़िरी बार अपडेट: नवंबर 2026</p>
+</div>
+
+<script>
+(function(){var q=/[?&]lang=(hi|en)/.exec(location.search),l=q?q[1]:null;
+try{if(!l)l=localStorage.getItem('sap-lang');}catch(e){}
+var h=l==='hi';if(h){document.body.className='h';document.documentElement.lang='hi';}
+document.getElementById(h?'lh':'le').className='on';})();
+</script>
 </body></html>

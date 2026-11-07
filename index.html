@@ -341,6 +341,10 @@ a.prow{color:inherit;text-decoration:none}
 .slv .sin{text-align:left}
 .chks{display:grid;grid-template-columns:1fr 1fr;gap:6px}.chk{display:flex;align-items:center;gap:8px;font-size:13px}
 .chk input{width:18px;height:18px}
+
+.btn.saved{background:#1F9D55;box-shadow:none;opacity:1}
+.howto{font-size:12.5px;color:#10224A;background:#fff;border-radius:10px;padding:10px 12px;margin:12px 0}
+.howto ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
 </style>
 
 <div id="splash"></div>
@@ -351,6 +355,71 @@ a.prow{color:inherit;text-decoration:none}
 (function(){
 var root=document.getElementById('app');
 var NOW=new Date(), TY=NOW.getFullYear(), TM=NOW.getMonth(), TD=NOW.getDate();
+
+/* ---------- language (English / Hindi) ---------- */
+var LANG='en';try{LANG=localStorage.getItem('sap-lang')==='hi'?'hi':'en';}catch(err){}
+/*I18N-START*/
+var HI={"Smart Attendance": "स्मार्ट अटेंडेंस", "Smart Attendance Pro logo": "स्मार्ट अटेंडेंस प्रो लोगो", "Smart Attendance · Accurate Salary · Better Management": "स्मार्ट अटेंडेंस · सही वेतन · बेहतर प्रबंधन", "Admin Panel": "एडमिन पैनल", "QR Code Scan": "QR कोड स्कैन", "Sign in with Google": "Google से साइन इन करें", "Main": "मुख्य", "Loading…": "लोड हो रहा है…", "Company Setup": "कंपनी सेटअप", "Company Name": "कंपनी का नाम", "Company name": "कंपनी का नाम", "Company Logo": "कंपनी का लोगो", "Upload logo": "लोगो अपलोड करें", "PNG or JPG": "PNG या JPG", "Save": "सेव करें", "✓ Saved": "✓ सेव हो गया", "Back": "वापस", "Cancel": "रद्द करें", "Enter the company name": "कंपनी का नाम लिखें", "Company logo updated": "कंपनी का लोगो बदल गया", "Could not open this picture": "यह फ़ोटो खुल नहीं सकी", "Sign-in failed. Try again.": "साइन इन नहीं हो सका। फिर कोशिश करें।", "Connecting… try again in a moment": "जुड़ रहा है… थोड़ी देर बाद फिर कोशिश करें", "Could not connect. Check internet.": "जुड़ नहीं सका। इंटरनेट जाँचें।", "No internet. Try again later.": "इंटरनेट नहीं है। बाद में कोशिश करें।", "Could not sync. Check internet.": "सिंक नहीं हो सका। इंटरनेट जाँचें।", "Home": "होम", "Reports": "रिपोर्ट", "Profile": "प्रोफ़ाइल", "My Report": "मेरी रिपोर्ट", "Total Employees": "कुल कर्मचारी", "Active Employees": "काम पर कर्मचारी", "On Leave": "छुट्टी पर", "Add Employee": "कर्मचारी जोड़ें", "No employees yet. Tap Add Employee on Home.": "अभी कोई कर्मचारी नहीं है। होम पर \"कर्मचारी जोड़ें\" दबाएँ।", "No employees yet": "अभी कोई कर्मचारी नहीं", "No active employees right now.": "अभी कोई कर्मचारी काम पर नहीं है।", "No one is on leave today.": "आज कोई छुट्टी पर नहीं है।", "No employee found.": "कोई कर्मचारी नहीं मिला।", "Search by name or ID": "नाम या ID से खोजें", "Search employee by name or ID": "नाम या ID से कर्मचारी खोजें", "Search deleted employee by name or ID": "नाम या ID से हटाया गया कर्मचारी खोजें", "Employee Name": "कर्मचारी का नाम", "Category": "श्रेणी", "Monthly Salary": "मासिक वेतन", "OT Rate": "OT दर", "OT Rate (Per Hour)": "OT दर (प्रति घंटा)", "Attendance Bonus": "उपस्थिति बोनस", "(Optional)": "(वैकल्पिक)", "(optional)": "(वैकल्पिक)", "Apply From": "कब से लागू", "Current Month": "इस महीने से", "Next Month": "अगले महीने से", "Changes apply from this month": "बदलाव इसी महीने से लागू होंगे", "Changes apply from next month": "बदलाव अगले महीने से लागू होंगे", "Update Employee": "कर्मचारी अपडेट करें", "Update": "अपडेट", "Monthly Salary (Fixed)": "मासिक वेतन (तय)", "OT Rate (Fixed)": "OT दर (तय)", "Work on Sunday": "रविवार को काम", "Sunday Holiday from Company": "कंपनी की ओर से रविवार की छुट्टी", "OT Pay Rate": "OT भुगतान दर", "Single": "एक गुना", "Double": "दोगुना", "Yes": "हाँ", "No": "नहीं", "Operator": "ऑपरेटर", "Supervisor": "सुपरवाइज़र", "Helper": "हेल्पर", "Staff": "स्टाफ़", "If Yes, a Sunday without attendance adds one day’s salary automatically.": "\"हाँ\" चुनने पर बिना हाज़िरी वाले रविवार का एक दिन का वेतन अपने-आप जुड़ जाएगा।", "If OT, every hour worked on a Sunday is paid as OT.": "\"OT\" चुनने पर रविवार को किया गया हर घंटा OT की तरह गिना जाएगा।", "What each OT hour pays: Single = the OT rate, 1.5× or Double.": "हर OT घंटे का भुगतान: एक गुना = OT दर, 1.5× या दोगुना।", "Enter the employee name": "कर्मचारी का नाम लिखें", "Enter the monthly salary": "मासिक वेतन लिखें", "Employee deleted · saved in Delete History": "कर्मचारी हटाया गया · \"हटाया गया इतिहास\" में सुरक्षित", "Employee QR": "कर्मचारी QR", "Share QR": "QR साझा करें", "Share": "साझा करें", "Print": "प्रिंट", "Download": "डाउनलोड", "Download PDF": "PDF डाउनलोड करें", "Delete": "हटाएँ", "Delete employee": "कर्मचारी हटाएँ", "Restore": "वापस जोड़ें", "Reset Phone": "फ़ोन रीसेट करें", "Not linked to any phone yet": "अभी किसी फ़ोन से जुड़ा नहीं", "QR is linked to one phone": "QR एक फ़ोन से जुड़ा है", "Removed from everywhere and their QR stops working. The full record stays in Delete History, where you can restore it.": "हर जगह से हट जाएगा और उसका QR काम करना बंद कर देगा। पूरा रिकॉर्ड \"हटाया गया इतिहास\" में सुरक्षित रहेगा, जहाँ से आप उसे वापस जोड़ सकते हैं।", "Delete Employee History": "हटाए गए कर्मचारियों का इतिहास", "Delete History": "हटाया गया इतिहास", "No deleted employees. Anyone you delete is kept here permanently.": "कोई हटाया गया कर्मचारी नहीं। जिसे आप हटाएँगे वह यहाँ हमेशा सुरक्षित रहेगा।", "Records here are kept permanently and cannot be deleted.": "यहाँ के रिकॉर्ड हमेशा सुरक्षित रहते हैं और मिटाए नहीं जा सकते।", "This employee has been removed": "इस कर्मचारी को हटा दिया गया है", "Phone link reset. The QR can be used on a new phone.": "फ़ोन का जुड़ाव रीसेट हो गया। QR अब नए फ़ोन पर चल सकता है।", "Phone link was reset. Scan your QR again.": "फ़ोन का जुड़ाव रीसेट हो गया है। अपना QR फिर से स्कैन करें।", "QR saved to your phone": "QR आपके फ़ोन में सेव हो गया", "Sharing is not available here, so the QR was saved": "यहाँ साझा करना संभव नहीं है, इसलिए QR सेव कर दिया गया", "Salary summary": "वेतन सारांश", "Attendance History": "हाज़िरी का इतिहास", "Month": "महीना", "Year": "साल", "Date": "तारीख़", "Punch In": "पंच इन", "Punch Out": "पंच आउट", "OT": "OT", "Working Days": "कार्य दिवस", "Leave Days": "छुट्टी के दिन", "OT Hours": "OT घंटे", "Work Amount": "काम की रकम", "Overtime Amount": "OT की रकम", "Grand Total Salary": "कुल वेतन", "Holiday": "अवकाश", "Leave": "छुट्टी", "No attendance recorded for this month.": "इस महीने की कोई हाज़िरी दर्ज नहीं है।", "Counts as Duty": "ड्यूटी में गिना जाएगा", "Counts as OT": "OT में गिना जाएगा", "Edit time": "समय बदलें", "Correct the punch times of this duty. A time earlier than Punch In is taken as the next morning (night duty).": "इस ड्यूटी के पंच का समय सुधारें। पंच इन से पहले का समय अगली सुबह का माना जाएगा (रात की ड्यूटी)।", "Time updated": "समय बदल दिया गया", "Enter the Punch In time": "पंच इन का समय लिखें", "Preparing PDF…": "PDF तैयार हो रही है…", "REAL (original punches)": "असली (मूल पंच)", "UPDATED (after edit)": "अपडेट (बदलाव के बाद)", "Employee": "कर्मचारी", "Salary": "वेतन", "Total": "कुल", "Language": "भाषा", "Duty Settings": "ड्यूटी सेटिंग", "Salary Slip Settings": "वेतन पर्ची सेटिंग", "Today's Attendance": "आज की हाज़िरी", "Punch Location": "पंच की जगह", "Holidays": "अवकाश", "Send Feedback": "सुझाव भेजें", "Privacy Policy": "गोपनीयता नीति", "Logout": "लॉगआउट", "Salary Slip": "वेतन पर्ची", "Duty Start Time": "ड्यूटी शुरू होने का समय", "Lunch Break (minutes)": "लंच ब्रेक (मिनट)", "Allowance (minutes)": "छूट (मिनट)", "Optional. Arriving or leaving within the allowance below counts as exactly on time.": "वैकल्पिक। नीचे दी गई छूट के अंदर आना या जाना ठीक समय पर माना जाएगा।", "Cut from every duty longer than 5 hours. Same for all employees.": "5 घंटे से लंबी हर ड्यूटी से कटेगा। सभी कर्मचारियों के लिए एक जैसा।", "Small minutes within this allowance have no value: no loss for early or late arrival, and no OT for them.": "इस छूट के अंदर के छोटे मिनटों की कोई कीमत नहीं: जल्दी या देर से आने पर कोई कटौती नहीं और उनका OT भी नहीं।", "Duty settings saved": "ड्यूटी सेटिंग सेव हो गई", "Add Holiday": "अवकाश जोड़ें", "Holiday name (optional)": "अवकाश का नाम (वैकल्पिक)", "e.g. Diwali": "जैसे दिवाली", "No holidays added yet.": "अभी कोई अवकाश नहीं जोड़ा गया।", "Remove holiday": "अवकाश हटाएँ", "Holiday added": "अवकाश जोड़ा गया", "Holiday removed": "अवकाश हटाया गया", "Pick the holiday date": "अवकाश की तारीख़ चुनें", "Every employee gets these dates as a paid Holiday automatically.": "इन तारीख़ों पर हर कर्मचारी को अपने-आप वेतन सहित अवकाश मिलेगा।", "Your feedback or problem": "आपका सुझाव या समस्या", "Write here…": "यहाँ लिखें…", "We read every message. Please include your phone number if you want a reply.": "हम हर संदेश पढ़ते हैं। जवाब चाहिए तो अपना फ़ोन नंबर ज़रूर लिखें।", "Send": "भेजें", "Write your feedback first": "पहले अपना सुझाव लिखें", "Thank you! Feedback sent.": "धन्यवाद! सुझाव भेज दिया गया।", "Could not send. Try again.": "भेजा नहीं जा सका। फिर कोशिश करें।", "The whole app, the reports and the privacy policy will use the language you choose. Amounts and times stay the same.": "पूरा ऐप, रिपोर्ट और गोपनीयता नीति आपकी चुनी हुई भाषा में दिखेंगे। रकम और समय वही रहेंगे।", "No one has punched in yet today.": "आज अभी किसी ने पंच इन नहीं किया।", "Employees can punch from anywhere": "कर्मचारी कहीं से भी पंच कर सकते हैं", "Location is ON": "लोकेशन चालू है", "Location is OFF": "लोकेशन बंद है", "Use my current location": "मेरी अभी की जगह इस्तेमाल करें", "Latitude": "अक्षांश (Latitude)", "Longitude": "देशांतर (Longitude)", "Allowed distance (metres)": "अनुमत दूरी (मीटर में)", "Between 30 and 5000 metres. 100 m is a good start.": "30 से 5000 मीटर के बीच। शुरू के लिए 100 मीटर ठीक है।", "Turn off (allow punching from anywhere)": "बंद करें (कहीं से भी पंच करने दें)", "Getting your location…": "आपकी जगह पता की जा रही है…", "Location filled in. Now tap Save.": "जगह भर गई है। अब \"सेव करें\" दबाएँ।", "Tap Use my current location first": "पहले \"मेरी अभी की जगह इस्तेमाल करें\" दबाएँ", "Distance must be between 30 and 5000 metres": "दूरी 30 से 5000 मीटर के बीच होनी चाहिए", "Punch location saved": "पंच की जगह सेव हो गई", "Punch location is off": "पंच की जगह बंद कर दी गई", "Checking your location…": "आपकी जगह जाँची जा रही है…", "This phone cannot give its location.": "यह फ़ोन अपनी जगह नहीं बता सकता।", "Could not get your location. Turn on Location and try again.": "आपकी जगह नहीं मिल सकी। लोकेशन चालू करके फिर कोशिश करें।", "Location is blocked. Allow Location for this app in the phone settings, then try again.": "लोकेशन बंद है। फ़ोन की सेटिंग में इस ऐप को लोकेशन की अनुमति दें, फिर कोशिश करें।", "Tap for": "हाज़िरी के लिए", "attendance": "दबाएँ", "Attendance: open camera to punch in or out": "हाज़िरी: पंच इन या आउट के लिए कैमरा खोलें", "Close camera": "कैमरा बंद करें", "Face Verification": "चेहरा सत्यापन", "Opening camera…": "कैमरा खुल रहा है…", "Offline · your punches are saved and will sync when internet is back": "ऑफ़लाइन · आपके पंच सेव हैं और इंटरनेट आने पर सिंक हो जाएँगे", "Scan Employee QR": "कर्मचारी QR स्कैन करें", "Scan from Gallery": "गैलरी से स्कैन करें", "Point the camera at the QR code": "कैमरा QR कोड की तरफ़ रखें", "Camera not available. Use Gallery.": "कैमरा उपलब्ध नहीं है। गैलरी इस्तेमाल करें।", "No QR code found in this picture": "इस फ़ोटो में QR कोड नहीं मिला", "This QR code is not valid": "यह QR कोड सही नहीं है", "This QR is already linked to another phone. Ask your admin to reset it.": "यह QR पहले से किसी दूसरे फ़ोन से जुड़ा है। अपने एडमिन से इसे रीसेट करवाएँ।", "Could not check the QR. Check internet.": "QR जाँचा नहीं जा सका। इंटरनेट जाँचें।", "Scanner could not load. Check internet and try again": "स्कैनर लोड नहीं हुआ। इंटरनेट जाँचकर फिर कोशिश करें", "Available in the next phase": "अगले चरण में उपलब्ध होगा", "Salary slip saved": "वेतन पर्ची सेव हो गई", "Salary slip settings saved": "वेतन पर्ची की सेटिंग सेव हो गई", "Show on the slip": "पर्ची पर दिखाएँ", "Company name and address": "कंपनी का नाम और पता", "(shown at the top of every slip)": "(हर पर्ची के ऊपर दिखेगा)", "Line 1: Company name": "पहली लाइन: कंपनी का नाम", "Line 2: Street, city, state, PIN": "दूसरी लाइन: गली, शहर, राज्य, PIN", "Write the company name on the first line, then the address.": "पहली लाइन में कंपनी का नाम लिखें, फिर पता।", "Extra income lines": "अतिरिक्त आय की लाइनें", "Extra deduction lines": "अतिरिक्त कटौती की लाइनें", "Your own additions to the salary, like Conveyance or Incentive. Type only the name here. The amount is filled in on each employee's slip.": "वेतन में आपकी अपनी जोड़ी हुई रकम, जैसे यात्रा भत्ता या प्रोत्साहन। यहाँ सिर्फ़ नाम लिखें। रकम हर कर्मचारी की पर्ची में भरी जाएगी।", "Your own cuts from the salary, like Canteen or Fine. Type only the name here.": "वेतन से आपकी अपनी कटौती, जैसे कैंटीन या जुर्माना। यहाँ सिर्फ़ नाम लिखें।", "A line shows on the slip only when it has a name.": "कोई लाइन तभी दिखेगी जब उसका नाम लिखा हो।", "Name, e.g. Conveyance": "नाम, जैसे यात्रा भत्ता", "Name, e.g. Incentive": "नाम, जैसे प्रोत्साहन", "Name, e.g. Canteen": "नाम, जैसे कैंटीन", "Name, e.g. Fine": "नाम, जैसे जुर्माना", "Designation": "पद", "PAN": "PAN", "Date of Joining": "नौकरी शुरू होने की तारीख़", "Dearness Allowance": "महँगाई भत्ता", "HRA": "HRA", "OT Hour": "OT घंटे", "ESI": "ESI", "PT": "PT", "Advance": "एडवांस", "Advance Balance": "एडवांस बाकी", "Leave Deduction": "छुट्टी की कटौती", "How to fill": "कैसे भरें", "Designation, PAN:": "पद, PAN:", "type them if you want them on the slip.": "पर्ची पर चाहिए तो लिखें।", "Amount boxes:": "रकम के खाने:", "type only what applies to this employee for this month, for example ESI, PT or Advance. An empty box means 0.": "इस कर्मचारी पर इस महीने जो लागू हो वही लिखें, जैसे ESI, PT या एडवांस। खाली खाने का मतलब 0।", "OT, Attendance Bonus, Leave Deduction:": "OT, उपस्थिति बोनस, छुट्टी की कटौती:", "these are worked out from the attendance. Leave the box empty to keep the automatic amount, or type a number to change it.": "ये हाज़िरी से अपने-आप निकलते हैं। अपने-आप वाली रकम रखने के लिए खाना खाली छोड़ें, या बदलने के लिए संख्या लिखें।", "Advance Balance:": "एडवांस बाकी:", "only for information. It is not deducted.": "सिर्फ़ जानकारी के लिए। यह काटा नहीं जाता।", "Everything you save belongs to the month shown above.": "जो भी आप सेव करेंगे वह ऊपर दिखाए गए महीने का होगा।", "BASIC SALARY": "मूल वेतन", "DEARNESS ALLOWANCE": "महँगाई भत्ता", "ATTENDANCE BONUS": "उपस्थिति बोनस", "ADVANCE": "एडवांस", "ADVANCE BALANCE": "एडवांस बाकी", "LEAVE DEDUCTION": "छुट्टी की कटौती", "EMPLOYEE NAME": "कर्मचारी का नाम", "EMPLOYEE CODE": "कर्मचारी कोड", "DESIGNATION": "पद", "DATE OF JOINING": "नौकरी शुरू होने की तारीख़", "TOTAL WORKING DAYS": "कुल कार्य दिवस", "NUMBER OF WORKING DAYS ATTEND": "उपस्थित कार्य दिवस", "LEAVE": "छुट्टी", "INCOME PARTICULAR": "आय का विवरण", "AMOUNT": "रकम", "PARTICULAR": "विवरण", "DEDUCTION AMOUNT": "कटौती की रकम", "TOTAL": "कुल", "TOTAL DEDUCTION": "कुल कटौती", "NET PAYMENT": "कुल भुगतान", "IN WORDS:-": "शब्दों में:-", "AUTHORISED SEAL/SIGN": "अधिकृत मुहर / हस्ताक्षर", "EMPLOYEE SIGNATURE": "कर्मचारी के हस्ताक्षर", "Save Salary Slip": "वेतन पर्ची सेव करें", "Show": "दिखाएँ", "Pro": "Pro", "Co": "Co", "QR": "QR", "January": "जनवरी", "February": "फ़रवरी", "March": "मार्च", "April": "अप्रैल", "May": "मई", "June": "जून", "July": "जुलाई", "August": "अगस्त", "September": "सितंबर", "October": "अक्टूबर", "November": "नवंबर", "December": "दिसंबर", "JANUARY": "जनवरी", "FEBRUARY": "फ़रवरी", "MARCH": "मार्च", "APRIL": "अप्रैल", "MAY": "मई", "JUNE": "जून", "JULY": "जुलाई", "AUGUST": "अगस्त", "SEPTEMBER": "सितंबर", "OCTOBER": "अक्टूबर", "NOVEMBER": "नवंबर", "DECEMBER": "दिसंबर", "Sun": "रवि", "Mon": "सोम", "Tue": "मंगल", "Wed": "बुध", "Thu": "गुरु", "Fri": "शुक्र", "Sat": "शनि", ", then choose how far from it punching is allowed.": ", फिर तय करें कि उससे कितनी दूरी तक पंच करने की अनुमति है।", "Employees can punch In or Out only near the workplace. Stand at your workplace and tap": "कर्मचारी सिर्फ़ काम की जगह के पास ही पंच इन या आउट कर सकेंगे। अपनी काम की जगह पर खड़े होकर दबाएँ", "Line 1: Company name\nLine 2: Street, city, state, PIN": "पहली लाइन: कंपनी का नाम\nदूसरी लाइन: गली, शहर, राज्य, PIN", "OT hours": "OT घंटे", "OT rate": "OT दर", "Pay Slip for the month of": "वेतन पर्ची, माह:"};
+
+var HI_N=["शून्य", "एक", "दो", "तीन", "चार", "पाँच", "छह", "सात", "आठ", "नौ", "दस", "ग्यारह", "बारह", "तेरह", "चौदह", "पंद्रह", "सोलह", "सत्रह", "अठारह", "उन्नीस", "बीस", "इक्कीस", "बाईस", "तेइस", "चौबीस", "पच्चीस", "छब्बीस", "सत्ताईस", "अट्ठाईस", "उनतीस", "तीस", "इकतीस", "बत्तीस", "तैंतीस", "चौंतीस", "पैंतीस", "छत्तीस", "सैंतीस", "अड़तीस", "उनतालीस", "चालीस", "इकतालीस", "बयालीस", "तैंतालीस", "चौवालीस", "पैंतालीस", "छियालीस", "सैंतालीस", "अड़तालीस", "उनचास", "पचास", "इक्यावन", "बावन", "तिरपन", "चौवन", "पचपन", "छप्पन", "सत्तावन", "अट्ठावन", "उनसठ", "साठ", "इकसठ", "बासठ", "तिरसठ", "चौंसठ", "पैंसठ", "छियासठ", "सड़सठ", "अड़सठ", "उनहत्तर", "सत्तर", "इकहत्तर", "बहत्तर", "तिहत्तर", "चौहत्तर", "पचहत्तर", "छिहत्तर", "सतहत्तर", "अठहत्तर", "उनासी", "अस्सी", "इक्यासी", "बयासी", "तिरासी", "चौरासी", "पचासी", "छियासी", "सत्तासी", "अट्ठासी", "नवासी", "नब्बे", "इक्यानवे", "बानवे", "तिरानवे", "चौरानवे", "पचानवे", "छियानवे", "सत्तानवे", "अट्ठानवे", "निन्यानवे"];
+function hiWords(w){
+  var u={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+  var tot=0,cur=0,ok=true;
+  w.split(/[\s-]+/).forEach(function(x){x=x.toLowerCase();if(x==='and'||!x)return;
+    if(u[x]!==undefined)cur+=u[x];else if(x==='hundred')cur*=100;
+    else if(x==='thousand'){tot+=cur*1000;cur=0;}else if(x==='lakh'){tot+=cur*100000;cur=0;}else if(x==='crore'){tot+=cur*10000000;cur=0;}else ok=false;});
+  if(!ok)return null;tot+=cur;
+  var out=[],n=tot;
+  [[10000000,'करोड़'],[100000,'लाख'],[1000,'हज़ार'],[100,'सौ']].forEach(function(p){var q=Math.floor(n/p[0]);if(q>0){out.push(HI_N[q]+' '+p[1]);n-=q*p[0];}});
+  if(n>0||!out.length)out.push(HI_N[n]);
+  return out.join(' ');
+}
+function hiM(m){return HI[m]||m;}
+
+var HI_RE=[
+ [/^Rupees (.+) Only$/,function(a,w){var h=hiWords(w);return h?'रुपये '+h+' मात्र':a;}],
+ [/^IN WORDS:-\s+Rupees (.+) Only$/,function(a,w){var h=hiWords(w);return h?'शब्दों में:- रुपये '+h+' मात्र':a;}],
+ [/^Pay Slip for the month of ([A-Za-z]+)-(\d{4})$/,function(a,m,y){return 'वेतन पर्ची, माह: '+hiM(m)+'-'+y;}],
+ [/^DATE:- (.+)$/,function(a,d){return 'तारीख़:- '+d;}],
+ [/^OT HOUR:-(.*)$/,function(a,x){return 'OT घंटे:-'+x;}],
+ [/^Employee added · (.+)$/,function(a,x){return 'कर्मचारी जोड़ा गया · '+x;}],
+ [/^Edit time · (.+)$/,function(a,x){return 'समय बदलें · '+x;}],
+ [/^Holiday · (.+)$/,function(a,x){return 'अवकाश · '+tr(x);}],
+ [/^Leave · (.+)$/,function(a,x){return 'छुट्टी · '+x.replace(/(\d+) h/,'$1 घं').replace(/(\d+) m/,'$1 मि');}],
+ [/^Punched In · (.+)$/,function(a,x){return 'पंच इन हुआ · '+x;}],
+ [/^Welcome (.+)$/,function(a,x){return 'स्वागत है '+x;}],
+ [/^(.+), open list$/,function(a,x){return tr(x)+', सूची खोलें';}],
+ [/^([A-Za-z]+) (\d{4})(\s+·\s+(.+))?$/,function(a,m,y,z,t){if(!HI[m])return a;return HI[m]+' '+y+(t?'  ·  '+tr(t):'');}],
+ [/^(\d\d-\d\d-\d{4}) · (Sun|Mon|Tue|Wed|Thu|Fri|Sat)$/,function(a,d,w){return d+' · '+HI[w];}],
+ [/^(\d+) min$/,function(a,n){return n+' मिनट';}],
+ [/^₹(\d+(?:\.\d+)?)\/hr$/,function(a,n){return '₹'+n+'/घंटा';}],
+ [/^Punching allowed within (\d+) m of the saved point$/,function(a,n){return 'सेव की गई जगह के '+n+' मीटर के अंदर पंच करने की अनुमति है';}],
+ [/^You are about (\d+) m away\. You can punch only within (\d+) m of the workplace\.$/,function(a,n,r){return 'आप लगभग '+n+' मीटर दूर हैं। आप काम की जगह के '+r+' मीटर के अंदर ही पंच कर सकते हैं।';}]
+];
+/*I18N-END*/
+function tr(s){
+  if(LANG!=='hi'||typeof s!=='string')return s;
+  var k=s.trim();if(!k)return s;
+  var v=HI[k];if(v!==undefined)return s.replace(k,v);
+  for(var i=0;i<HI_RE.length;i++){var m=k.match(HI_RE[i][0]);if(m)return s.replace(k,HI_RE[i][1].apply(null,m));}
+  if(window.__miss&&/[A-Za-z]{2,}/.test(k))window.__miss[k]=1;
+  return s;
+}
+function applyLang(){
+  document.documentElement.lang=LANG==='hi'?'hi':'en';
+  if(LANG!=='hi')return;
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),n,list=[];
+  while((n=w.nextNode()))list.push(n);
+  list.forEach(function(t){
+    var p=t.parentNode;if(p&&/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.tagName))return;
+    if(p&&p.closest&&p.closest('[data-nt]'))return;
+    var v=t.nodeValue;if(!/[A-Za-z]/.test(v))return;var r=tr(v);if(r!==v)t.nodeValue=r;
+  });
+  [].forEach.call(root.querySelectorAll('[placeholder],[aria-label],[title]'),function(el){
+    ['placeholder','aria-label','title'].forEach(function(a){var v=el.getAttribute(a);if(v){var r=tr(v);if(r!==v)el.setAttribute(a,r);}});
+  });
+  [].forEach.call(root.querySelectorAll('a[href^="privacy.html"]'),function(a){a.setAttribute('href','privacy.html?lang=hi');});
+}
 var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 var CATS=['Operator','Helper','Staff','Supervisor'];
 
@@ -422,7 +491,7 @@ function migrate(e){
 }
 var KEY='payroll-demo-v2';
 var S={
-  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,pe:null,holOpen:false,todayOpen:false,slipOn:false,ssOpen:false,slips:{},addr:'',sc:{off:[],l:{c1:'',c2:'',d1:'',d2:''}},holidays:[],role:null,dh:null,confirmDel:false,
+  screen:'start',company:'',logo:null,gmail:'admin@gmail.com',setupDone:false,nextNum:1,emps:[],deleted:[],cfg:{start:'',lunch:0,grace:10},cfgOpen:false,fbOpen:false,confirmAcct:false,pe:null,holOpen:false,todayOpen:false,slipOn:false,ssOpen:false,langOpen:false,locOpen:false,loc:null,sv:'',slips:{},addr:'',sc:{off:[],l:{c1:'',c2:'',d1:'',d2:''}},holidays:[],role:null,dh:null,confirmDel:false,
   tab:'home',sub:null,aprof:false,q:'',rm:TM,ry:TY,etab:'home',cam:null,meId:null,camId:0,form:{sun:'y',apply:'cur',otx:'1',sunw:'duty',starter:'old'}
 };
 function save(){}   /* data now lives in Firebase; Firestore keeps its own offline copy */
@@ -711,7 +780,7 @@ function slipHTML(e,y,m,edit){
     var v=(f[k]===undefined||f[k]===null)?'':f[k];
     return '<input class="sin" data-k="'+k+'" '+(txt?'type="text" maxlength="30"':'type="number" inputmode="decimal" min="0"')+' value="'+esc(v)+'" placeholder="'+(txt?'':rs(auto||0))+'" aria-label="'+k+'">';
   }
-  var h='<div class="slip" id="slip"><div class="slco"><b>'+esc(S.company)+'</b>'+addr.map(function(a){return '<span>'+esc(a)+'</span>';}).join('')+'</div><table class="slt"><colgroup><col style="width:28%"><col style="width:19%"><col style="width:29%"><col style="width:24%"></colgroup>';
+  var h='<div class="slip" id="slip"><div class="slco">'+addr.map(function(a,i){return i?'<span>'+esc(a)+'</span>':'<b>'+esc(a)+'</b>';}).join('')+'</div><table class="slt"><colgroup><col style="width:28%"><col style="width:19%"><col style="width:29%"><col style="width:24%"></colgroup>';
   h+='<tr><td colspan="3" class="slc"><b>'+esc(M.title)+'</b></td><td class="slc">DATE:- '+M.date+'</td></tr>';
   M.info.forEach(function(r){
     h+='<tr>'+r.map(function(p){
@@ -740,7 +809,14 @@ function slipHTML(e,y,m,edit){
 function slipScreen(e,admin){
   var mo=slipHTML(e,S.ry,S.rm,admin);
   return subTop('Salary Slip','slip-back')+selectsHTML('slip')+'<div class="body gut slbody">'+mo+
-   (admin?'<span class="hint">Leave a box empty to use the automatic amount. OT, bonus and leave deduction come from the attendance.</span><button class="btn" data-act="slip-save">Save Salary Slip</button>':'')+'</div>';
+   (admin?'<div class="howto"><b>How to fill</b><ul><li><b>Designation, PAN:</b> type them if you want them on the slip.</li><li><b>Amount boxes:</b> type only what applies to this employee for this month, for example ESI, PT or Advance. An empty box means 0.</li><li><b>OT, Attendance Bonus, Leave Deduction:</b> these are worked out from the attendance. Leave the box empty to keep the automatic amount, or type a number to change it.</li><li><b>Advance Balance:</b> only for information. It is not deducted.</li><li>Everything you save belongs to the month shown above.</li></ul></div>'+svBtn('slip-save','Save Salary Slip','slip'):'')+'</div>';
+}
+function svBtn(act,label,key){
+  return S.sv===key?'<button class="btn saved" data-act="'+act+'" data-l="'+label+'" disabled>&#10003; Saved</button>':'<button class="btn" data-act="'+act+'" data-l="'+label+'">'+label+'</button>';
+}
+function svReset(){
+  if(!S.sv)return;S.sv='';
+  var b=root.querySelector('.btn.saved[data-l]');if(b){b.disabled=false;b.classList.remove('saved');b.textContent=b.dataset.l;}
 }
 function slipForm(){
   var f={};[].forEach.call(root.querySelectorAll('.sin[data-k]'),function(el){
@@ -761,10 +837,9 @@ function pdfSlip(e,y,m){
   var x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);
   var cw=[Math.round(TW*.26),Math.round(TW*.16),Math.round(TW*.36)];cw.push(TW-cw[0]-cw[1]-cw[2]);
   var INK='#111',LN='#111',y0=Mg;
-  function txt(t,px,py,font,al,col){x.font=font;x.textAlign=al||'left';x.fillStyle=col||INK;x.textBaseline='middle';x.fillText(t,px,py);}
-  function fit(t,w,font){x.font=font;var s=String(t);while(x.measureText(s).width>w-16&&s.length>2)s=s.slice(0,-2);return s;}
-  txt(M.title&&S.company,W/2,y0+22,'800 40px sans-serif','center');y0+=48;
-  String(S.addr||'').split('\n').filter(function(a){return a.trim();}).forEach(function(a){txt(a.trim(),W/2,y0+14,'500 24px sans-serif','center','#333');y0+=32;});
+  function txt(t,px,py,font,al,col){t=tr(String(t));x.font=font;x.textAlign=al||'left';x.fillStyle=col||INK;x.textBaseline='middle';x.fillText(t,px,py);}
+  function fit(t,w,font){x.font=font;var s=tr(String(t));while(x.measureText(s).width>w-16&&s.length>2)s=s.slice(0,-2);return s;}
+  String(S.addr||'').split('\n').filter(function(a){return a.trim();}).forEach(function(a,i){if(i===0){txt(a.trim(),W/2,y0+22,'800 38px sans-serif','center');y0+=48;}else{txt(a.trim(),W/2,y0+14,'500 24px sans-serif','center','#333');y0+=32;}});
   y0+=18;
   var ys=y0;
   function row(h,cells,bold,fill){   /* cells: [{c0,span,t,al,b}] */
@@ -876,7 +951,7 @@ function pdfEmployees(list){
   function newPage(){cv=document.createElement('canvas');cv.width=W;cv.height=H;x=cv.getContext('2d');x.fillStyle=FR;x.fillRect(0,0,W,H);pages.push(cv);y=M;}
   function rr(px,py,w,h,r,fill,stroke){x.beginPath();x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath();if(fill){x.fillStyle=fill;x.fill();}if(stroke){x.strokeStyle=stroke;x.lineWidth=2;x.stroke();}}
   function fit(t,w){t=String(t);if(x.measureText(t).width<=w)return t;while(t.length>1&&x.measureText(t+'…').width>w)t=t.slice(0,-1);return t+'…';}
-  function ctext(t,cx,py,font,col){x.font=font;x.fillStyle=col;x.textAlign='center';x.fillText(t,cx,py);x.textAlign='left';}
+  function ctext(t,cx,py,font,col){t=tr(String(t));x.font=font;x.fillStyle=col;x.textAlign='center';x.fillText(t,cx,py);x.textAlign='left';}
   function tile(px,py,w,h,label,val,big){
     rr(px,py,w,h,18,CARD,'#C3D4EE');
     ctext(val,px+w/2,py+h/2+(big?15:12),'700 '+(big?'40':'31')+'px sans-serif',INK);
@@ -998,9 +1073,9 @@ function ccol(path){return CL.m.collection(CL.db,path);}
 function empPath(fid){return 'companies/'+CL.cid+'/employees/'+fid;}
 function empDoc(e){return {id:e.id,name:e.name,cur:e.cur,prev:e.prev||null,next:e.next||null,sunPaid:e.sunPaid!==false,status:e.delAt?'deleted':'active',starter:e.starter||'old',delAt:e.delAt||null,gaps:e.gaps||[],createdAt:e.createdAt||Date.now()};}
 function saveEmp(e){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc(empPath(e.fid)),empDoc(e),{merge:true}).catch(cloudErr);}
-function saveCompany(){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc('companies/'+CL.cid),{ownerUid:CL.uid,name:S.company,logo:S.logo||null,nextNum:S.nextNum,cfgStart:S.cfg.start||'',cfgLunch:+S.cfg.lunch||0,cfgGrace:+S.cfg.grace,holidays:S.holidays||[],addr:S.addr||'',slipCfg:S.sc},{merge:true}).catch(cloudErr);}
+function saveCompany(){if(!CL.ok||!CL.cid)return;CL.m.setDoc(cdoc('companies/'+CL.cid),{ownerUid:CL.uid,name:S.company,logo:S.logo||null,nextNum:S.nextNum,cfgStart:S.cfg.start||'',cfgLunch:+S.cfg.lunch||0,cfgGrace:+S.cfg.grace,holidays:S.holidays||[],addr:S.addr||'',slipCfg:S.sc,loc:S.loc||null},{merge:true}).catch(cloudErr);}
 function savePunch(e,s){if(!CL.ok)return;if(!s.id)s.id=String(s.i);var r=cdoc(empPath(e.fid)+'/punches/'+s.id);(s.o==null?CL.m.setDoc(r,{i:s.i,o:null}):CL.m.updateDoc(r,{o:s.o})).catch(cloudErr);}
-function applyCfg(v){S.addr=v.addr||'';S.sc=normSc(v.slipCfg);S.holidays=Array.isArray(v.holidays)?v.holidays:[];S.cfg={start:v.cfgStart||'',lunch:+v.cfgLunch||0,grace:v.cfgGrace==null?10:+v.cfgGrace};}
+function applyCfg(v){S.loc=(v.loc&&typeof v.loc.lat==='number'&&typeof v.loc.lng==='number'&&v.loc.r>0)?{lat:v.loc.lat,lng:v.loc.lng,r:v.loc.r}:null;S.addr=v.addr||'';S.sc=normSc(v.slipCfg);S.holidays=Array.isArray(v.holidays)?v.holidays:[];S.cfg={start:v.cfgStart||'',lunch:+v.cfgLunch||0,grace:v.cfgGrace==null?10:+v.cfgGrace};}
 function nextNumber(){var mx=S.nextNum-1;S.emps.concat(S.deleted).forEach(function(e){var n=parseInt(String(e.id).slice(3),10);if(n>mx)mx=n;});return mx+1;}
 /* a snapshot can arrive while someone is typing: never rebuild the screen under their fingers */
 function softRender(){var a=document.activeElement;if(a&&root.contains(a)&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))return;render();}
@@ -1106,7 +1181,7 @@ function doLogout(msg){
   stopSync();clearEmp();
   var p=CL.ok&&CL.au&&S.role==='admin'?CL.m.signOut(CL.au):Promise.resolve();   /* an employee phone keeps its own anonymous id, so its QR link survives logout */
   if(CL.ok)useSide(CL.A);
-  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.holidays=[];S.addr='';S.sc=normSc(null);S.slips={};S.slipOn=false;S.ssOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.cfgOpen=false;
+  S.role=null;S.meId=null;S.emps=[];S.deleted=[];S.company='';S.logo=null;S.setupDone=false;S.cid=null;CL.cid=null;S.cfg={start:'',lunch:0,grace:10};S.holidays=[];S.loc=null;S.locOpen=false;S.addr='';S.sc=normSc(null);S.slips={};S.slipOn=false;S.ssOpen=false;S.langOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.locOpen=false;S.langOpen=false;S.cfgOpen=false;
   S.aprof=false;S.dh=null;S.sub=null;S.q='';S.cam=null;S.screen='start';render();
   if(msg)toast(msg);
   p.catch(function(){});
@@ -1269,16 +1344,28 @@ VIEWS.admin=function(){
      (came.length?'<ul class="list">'+came.map(function(c){
        return '<li><div class="li hli"><span class="who"><b>'+esc(c.e.name)+'</b><small>'+esc(c.e.id)+' · In '+clockMs(c.u.inMs)+(c.u.open?' · Working now':(c.u.outMs?' · Out '+clockMs(c.u.outMs):''))+'</small></span></div></li>';
      }).join('')+'</ul>':'<span class="hint">No one has punched in yet today.</span>')+'</div>';
+  }else if(S.aprof&&S.langOpen){
+    main=subTop('Language','lang-back')+'<div class="body gut"><button class="prow" data-act="lang-set" data-v="en"><b data-nt>English</b>'+(LANG==='en'?'<span class="v">&#10003;</span>':'')+'</button><button class="prow" data-act="lang-set" data-v="hi"><b data-nt>\u0939\u093f\u0928\u094d\u0926\u0940 (Hindi)</b>'+(LANG==='hi'?'<span class="v">&#10003;</span>':'')+'</button><span class="hint">The whole app, the reports and the privacy policy will use the language you choose. Amounts and times stay the same.</span></div>';
+  }else if(S.aprof&&S.locOpen){
+    var lc=S.loc;
+    main=subTop('Punch Location','loc-back')+'<div class="body gut">'+
+     '<span class="hint">Employees can punch In or Out only near the workplace. Stand at your workplace and tap <b>Use my current location</b>, then choose how far from it punching is allowed.</span>'+
+     '<div class="pcard" style="margin:10px 0"><b>'+(lc?'Location is ON':'Location is OFF')+'</b><span>'+(lc?'Punching allowed within '+lc.r+' m of the saved point':'Employees can punch from anywhere')+'</span></div>'+
+     '<button class="btn sec" data-act="loc-here">'+ic('globe',18)+'Use my current location</button>'+
+     '<div class="field"><label for="loc-lat">Latitude</label><input class="inp" id="loc-lat" inputmode="decimal" value="'+(lc?lc.lat:'')+'" placeholder="e.g. 18.520430"></div>'+
+     '<div class="field"><label for="loc-lng">Longitude</label><input class="inp" id="loc-lng" inputmode="decimal" value="'+(lc?lc.lng:'')+'" placeholder="e.g. 73.856743"></div>'+
+     '<div class="field"><label for="loc-r">Allowed distance (metres)</label><input class="inp" id="loc-r" inputmode="numeric" value="'+(lc?lc.r:100)+'" placeholder="100"><span class="hint">Between 30 and 5000 metres. 100 m is a good start.</span></div>'+
+     svBtn('loc-save','Save','loc')+(lc?'<button class="btn sec" data-act="loc-off" style="margin-top:10px">Turn off (allow punching from anywhere)</button>':'')+'</div>';
   }else if(S.aprof&&S.ssOpen){
     var sc=S.sc||normSc(null);
     main=subTop('Salary Slip Settings','ss-back')+'<div class="body gut">'+
-     '<div class="field"><label for="ss-addr">Company Address <i>(shown under the company name)</i></label><textarea class="inp" id="ss-addr" maxlength="200" placeholder="Street, city, state, PIN">'+esc(S.addr||'')+'</textarea></div>'+
+     '<div class="field"><label for="ss-addr">Company name and address <i>(shown at the top of every slip)</i></label><textarea class="inp" id="ss-addr" maxlength="200" placeholder="Line 1: Company name&#10;Line 2: Street, city, state, PIN">'+esc(S.addr||'')+'</textarea><span class="hint">Write the company name on the first line, then the address.</span></div>'+
      '<div class="field"><span class="lab">Show on the slip</span><div class="chks">'+SLIP_KEYS.map(function(k){return '<label class="chk"><input type="checkbox" id="ss-k-'+k[0]+'"'+(sc.off.indexOf(k[0])<0?' checked':'')+'><span>'+k[1]+'</span></label>';}).join('')+'</div></div>'+
-     '<div class="field"><span class="lab">Extra lines <i>(optional)</i></span>'+
-     '<input class="inp" id="ss-c1" maxlength="24" placeholder="Extra income 1 (e.g. Conveyance)" value="'+esc(sc.l.c1)+'"><input class="inp" id="ss-c2" maxlength="24" placeholder="Extra income 2" value="'+esc(sc.l.c2)+'">'+
-     '<input class="inp" id="ss-d1" maxlength="24" placeholder="Extra deduction 1 (e.g. Canteen)" value="'+esc(sc.l.d1)+'"><input class="inp" id="ss-d2" maxlength="24" placeholder="Extra deduction 2" value="'+esc(sc.l.d2)+'"></div>'+
-     '<span class="hint">An extra line appears on the slip only when it has a name. Amounts are filled in on each employee\'s slip.</span>'+
-     '<button class="btn" data-act="ss-save">Save</button></div>';
+     '<div class="field"><span class="lab">Extra income lines <i>(optional)</i></span><span class="hint">Your own additions to the salary, like Conveyance or Incentive. Type only the name here. The amount is filled in on each employee\'s slip.</span>'+
+     '<input class="inp" id="ss-c1" maxlength="24" placeholder="Name, e.g. Conveyance" value="'+esc(sc.l.c1)+'"><input class="inp" id="ss-c2" maxlength="24" placeholder="Name, e.g. Incentive" value="'+esc(sc.l.c2)+'"></div>'+
+     '<div class="field"><span class="lab">Extra deduction lines <i>(optional)</i></span><span class="hint">Your own cuts from the salary, like Canteen or Fine. Type only the name here.</span>'+
+     '<input class="inp" id="ss-d1" maxlength="24" placeholder="Name, e.g. Canteen" value="'+esc(sc.l.d1)+'"><input class="inp" id="ss-d2" maxlength="24" placeholder="Name, e.g. Fine" value="'+esc(sc.l.d2)+'"></div>'+
+     '<span class="hint">A line shows on the slip only when it has a name.</span>'+svBtn('ss-save','Save','ss')+'</div>';
   }else if(S.aprof&&S.holOpen){
     var DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],hs=(S.holidays||[]).slice().sort(function(a,b){return a.d<b.d?-1:1;});
     main=subTop('Holidays','hol-back')+'<div class="body gut">'+
@@ -1304,9 +1391,10 @@ VIEWS.admin=function(){
     main=subTop('Profile','aback')+'<div class="body gut"><div class="pcard"><label class="logoedit" for="logo2">'+logoHTML()+'<span class="bdg">'+ic('camera',15)+'</span></label>'+
      '<input class="sr" id="logo2" type="file" accept="image/*"><b>'+esc(S.company)+'</b><span>'+esc(S.gmail)+'</span>'+
      '</div>'+
-     '<div class="prow">'+ic('globe',20)+'<b>Language</b><span class="v">English</span></div>'+
+     '<button class="prow" data-act="lang-open">'+ic('globe',20)+'<b>Language</b><span class="v" data-nt>'+(LANG==='hi'?'\u0939\u093f\u0928\u094d\u0926\u0940':'English')+'</span></button>'+
      '<button class="prow" data-act="cfg-open">'+ic('clock',20)+'<b>Duty Settings</b></button>'+
      '<button class="prow" data-act="ss-open">'+ic('report',20)+'<b>Salary Slip Settings</b></button>'+
+     '<button class="prow" data-act="loc-open">'+ic('globe',20)+'<b>Punch Location</b></button>'+
      '<button class="prow" data-act="today-open">'+ic('briefcase',20)+'<b>Today\'s Attendance</b></button>'+
      '<button class="prow" data-act="hol-open">'+ic('calendar',20)+'<b>Holidays</b></button>'+
      '<button class="prow" data-act="dh-open">'+ic('trash',20)+'<b>Delete Employee History</b></button>'+
@@ -1376,12 +1464,16 @@ VIEWS.emp=function(){
       '<div class="scrollbody">'+summaryHTML(e,TY,TM,true)+'</div>';
   }else if(S.etab==='report'){
     main=reportScreen(e);
+  }else if(S.langOpen){
+    main=subTop('Language','lang-back')+'<div class="body gut"><button class="prow" data-act="lang-set" data-v="en"><b data-nt>English</b>'+(LANG==='en'?'<span class="v">&#10003;</span>':'')+'</button><button class="prow" data-act="lang-set" data-v="hi"><b data-nt>\u0939\u093f\u0928\u094d\u0926\u0940 (Hindi)</b>'+(LANG==='hi'?'<span class="v">&#10003;</span>':'')+'</button><span class="hint">The whole app, the reports and the privacy policy will use the language you choose. Amounts and times stay the same.</span></div>';
   }else if(S.slipOn){
     main=slipScreen(e,false);
   }else{
     main='<div class="body gut" style="padding-top:28px"><div class="hbox pbox"><div class="hco">'+(S.logo?logoHTML():'')+'<b>'+esc(S.company)+'</b></div>'+
      '<div class="pcard"><b>'+esc(e.name)+'</b><span>'+e.id+'</span></div></div>'+
      '<button class="prow" data-act="slip-open" style="margin-top:12px">'+ic('report',20)+'<b>Salary Slip</b></button>'+
+     '<button class="prow" data-act="lang-open">'+ic('globe',20)+'<b>Language</b><span class="v" data-nt>'+(LANG==='hi'?'\u0939\u093f\u0928\u094d\u0926\u0940':'English')+'</span></button>'+
+     '<a class="prow" href="privacy.html" target="_blank" rel="noopener">'+ic('shield',20)+'<b>Privacy Policy</b></a>'+
      '<button class="prow out" data-act="logout" style="margin-top:12px">'+ic('logout',20)+'<b>Logout</b></button></div>';
   }
   return '<div class="scr">'+main+'</div>'+navHTML(ENAV,S.etab,'etab');
@@ -1400,13 +1492,13 @@ function camHTML(){
 var tt;
 function toast(msg){
   clearTimeout(tt);var old=root.querySelector('.toast');if(old)old.remove();
-  var el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=msg;root.appendChild(el);
+  var el=document.createElement('div');el.className='toast';el.setAttribute('role','status');el.textContent=tr(msg);root.appendChild(el);
   tt=setTimeout(function(){el.remove();},2400);
 }
 function render(){
   if(S.screen==='emp'&&!me()){S.screen='start';S.role=null;S.meId=null;S.cam=null;}   /* employee was removed: back to the first screen */
   var html='<div class="shell">'+VIEWS[S.screen]()+(S.cam?camHTML():'')+'</div>';
-  root.innerHTML=html;
+  root.innerHTML=html;applyLang();
   stopScan();if(S.screen==='scan')startScan();
   document.documentElement.style.setProperty('--topfill',S.cam?'var(--cam)':(html.indexOf('class="band"')>-1?'var(--band)':'var(--frame)'));
   save();
@@ -1414,7 +1506,28 @@ function render(){
 function val(id){var el=document.getElementById(id);return el?el.value.trim():'';}
 function num(id){var v=parseFloat(val(id));return isNaN(v)?0:Math.max(0,v);}
 
+function getPos(cb){
+  if(!navigator.geolocation){cb(null,'This phone cannot give its location.');return;}
+  navigator.geolocation.getCurrentPosition(function(p){cb(p,null);},function(er){
+    cb(null,er&&er.code===1?'Location is blocked. Allow Location for this app in the phone settings, then try again.':'Could not get your location. Turn on Location and try again.');
+  },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+function metres(a,b,c,d){
+  var R=6371000,r=Math.PI/180,dl=(c-a)*r,dg=(d-b)*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dg/2)*Math.sin(dg/2);
+  return 2*R*Math.asin(Math.sqrt(x));
+}
 function openCam(){
+  if(!S.loc){startCam();return;}
+  if(S.checkingLoc)return;S.checkingLoc=true;toast('Checking your location…');
+  getPos(function(p,err){
+    S.checkingLoc=false;
+    if(err){toast(err);return;}
+    var d=metres(S.loc.lat,S.loc.lng,p.coords.latitude,p.coords.longitude),tol=Math.min(p.coords.accuracy||0,50);
+    if(d>S.loc.r+tol){toast('You are about '+Math.round(d)+' m away. You can punch only within '+S.loc.r+' m of the workplace.');return;}
+    startCam();
+  });
+}
+function startCam(){
   var e=me(),mode=isActive(e)?'out':'in',my=++S.camId;
   S.cam={mode:mode,id:my};render();
   var steps=[].slice.call(root.querySelectorAll('.vstep')),i=0;
@@ -1442,6 +1555,7 @@ root.addEventListener('click',function(ev){
   var b=ev.target.closest('[data-act]');
   if(!b)return;
   var a=b.dataset.act,id=b.dataset.id,msg=null;
+  if(!/-save$/.test(a))S.sv='';
   switch(a){
     case 'seg':
       S.form[b.dataset.g]=b.dataset.v;
@@ -1459,16 +1573,16 @@ root.addEventListener('click',function(ev){
     case 'setup-save':
       if(!val('cname')){toast('Enter the company name');return;}
       S.company=val('cname');S.setupDone=true;saveCompany();S.screen='admin';S.tab='home';S.sub=null;S.aprof=false;S.q='';break;
-    case 'tab':S.slipOn=false;S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.confirmAcct=false;S.pe=null;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
-    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;break;
-    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;break;
+    case 'tab':S.slipOn=false;S.tab=b.dataset.t;S.sub=null;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.locOpen=false;S.langOpen=false;S.confirmAcct=false;S.pe=null;S.confirmDel=false;S.aprof=false;S.q='';S.rm=TM;S.ry=TY;break;
+    case 'aprof':S.aprof=true;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.locOpen=false;S.langOpen=false;break;
+    case 'aback':S.aprof=false;S.dh=null;S.cfgOpen=false;S.fbOpen=false;S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.locOpen=false;S.langOpen=false;break;
     case 'slip-open':S.slipOn=true;watchSlips(slipTarget());break;
     case 'slip-back':S.slipOn=false;break;
     case 'slip-save':{
       var se=slipTarget();if(!se||S.role!=='admin')return;
       var sf=slipForm(),sk=se.fid+'|'+S.ry+'-'+p2(S.rm+1);S.slips[sk]=sf;
       if(CL.ok)CL.m.setDoc(cdoc(empPath(se.fid)+'/slips/'+S.ry+'-'+p2(S.rm+1)),{f:sf,at:Date.now()}).catch(cloudErr);
-      msg='Salary slip saved';break;}
+      S.sv='slip';msg='Salary slip saved';break;}
     case 'slip-pdf':{var pe0=slipTarget();if(pe0)dlBlob('SalarySlip-'+fname(pe0.name+'-'+pe0.id)+'-'+fname(MONTHS[S.rm]+'-'+S.ry)+'.pdf',pdfSlip(pe0,S.ry,S.rm));return;}
     case 'ss-open':S.ssOpen=true;break;
     case 'ss-back':S.ssOpen=false;break;
@@ -1476,11 +1590,30 @@ root.addEventListener('click',function(ev){
       var nsc={off:[],l:{c1:val('ss-c1'),c2:val('ss-c2'),d1:val('ss-d1'),d2:val('ss-d2')}};
       SLIP_KEYS.forEach(function(k){var cb=document.getElementById('ss-k-'+k[0]);if(cb&&!cb.checked)nsc.off.push(k[0]);});
       S.sc=normSc(nsc);S.addr=(document.getElementById('ss-addr')||{value:''}).value.trim().slice(0,200);
-      saveCompany();msg='Salary slip settings saved';break;}
+      saveCompany();S.sv='ss';msg='Salary slip settings saved';break;}
+    case 'lang-open':S.langOpen=true;break;
+    case 'lang-back':S.langOpen=false;break;
+    case 'lang-set':LANG=b.dataset.v==='hi'?'hi':'en';try{localStorage.setItem('sap-lang',LANG);}catch(err){}S.langOpen=false;break;
+    case 'loc-open':S.locOpen=true;break;
+    case 'loc-back':S.locOpen=false;break;
+    case 'loc-here':
+      toast('Getting your location…');
+      getPos(function(p,err){
+        if(err){toast(err);return;}
+        document.getElementById('loc-lat').value=p.coords.latitude.toFixed(6);document.getElementById('loc-lng').value=p.coords.longitude.toFixed(6);
+        svReset();toast('Location filled in. Now tap Save.');
+      });
+      return;
+    case 'loc-save':{
+      var la=parseFloat(val('loc-lat')),lo=parseFloat(val('loc-lng')),rr=Math.round(parseFloat(val('loc-r')));
+      if(!(la>=-90&&la<=90)||!(lo>=-180&&lo<=180)||isNaN(la)||isNaN(lo)){toast('Tap Use my current location first');return;}
+      if(!(rr>=30&&rr<=5000)){toast('Distance must be between 30 and 5000 metres');return;}
+      S.loc={lat:la,lng:lo,r:rr};saveCompany();S.sv='loc';msg='Punch location saved';break;}
+    case 'loc-off':S.loc=null;saveCompany();msg='Punch location is off';break;
     case 'today-open':S.todayOpen=true;break;
     case 'today-back':S.todayOpen=false;break;
     case 'hol-open':S.holOpen=true;break;
-    case 'hol-back':S.holOpen=false;S.todayOpen=false;S.ssOpen=false;break;
+    case 'hol-back':S.holOpen=false;S.todayOpen=false;S.ssOpen=false;S.locOpen=false;S.langOpen=false;break;
     case 'hol-add':
       var hd=val('hol-d'),hn=val('hol-n').slice(0,30);
       if(!/^\d{4}-\d{2}-\d{2}$/.test(hd)){toast('Pick the holiday date');return;}
@@ -1572,7 +1705,7 @@ root.addEventListener('click',function(ev){
       });
       S.pe=null;msg='Time updated';break;
     case 'qr-do':qrAction(b.dataset.w,byId(S.sub&&S.sub.id));return;
-    case 'etab':S.slipOn=false;S.etab=b.dataset.t;S.rm=TM;S.ry=TY;break;
+    case 'etab':S.slipOn=false;S.langOpen=false;S.etab=b.dataset.t;S.rm=TM;S.ry=TY;break;
     case 'soon':msg='Available in the next phase';break;
     case 'cam':openCam();return;
     case 'cam-close':S.cam=null;break;
@@ -1581,6 +1714,7 @@ root.addEventListener('click',function(ev){
   if(msg)toast(msg);
 });
 /* keyboard arrow / Enter: go to the next box, or close the keyboard on the last one */
+root.addEventListener('change',function(ev){if(ev.target&&ev.target.type==='checkbox')svReset();});
 root.addEventListener('keydown',function(ev){
   if(ev.key!=='Enter'&&ev.keyCode!==13)return;
   var t=ev.target;
@@ -1590,6 +1724,7 @@ root.addEventListener('keydown',function(ev){
   if(t.id!=='search'&&nx)nx.focus();else t.blur();
 });
 root.addEventListener('input',function(ev){
+  svReset();
   if(ev.target.classList&&ev.target.classList.contains('sin')){refreshSlip();return;}
   if(ev.target.id==='search'){
     S.q=ev.target.value;
