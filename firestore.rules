@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    // The company document id is the admin's own Google user id.
+    function isOwner(cid) {
+      return signedIn() && request.auth.uid == cid
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    match /companies/{cid} {
+      allow get: if signedIn();
+      allow create: if isOwner(cid) && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isOwner(cid) && request.resource.data.ownerUid == resource.data.ownerUid;
+      // Only the admin can erase the company (Profile > Delete Account & Data).
+      allow delete: if false;   // records are never erased
+
+      // In-app notifications written by the admin (holiday, slip, settings). Everyone signed in to this company reads them.
+      match /notices/{nid} {
+        allow get, list: if signedIn();
+        allow create: if isOwner(cid)
+          && request.resource.data.keys().hasOnly(['t', 'm', 'at', 'to'])
+          && request.resource.data.t is string && request.resource.data.t.size() <= 60
+          && request.resource.data.m is string && request.resource.data.m.size() <= 400
+          && request.resource.data.at is number;
+        allow update, delete: if false;
+      }
+
+      match /employees/{eid} {
+        function empDev() {
+          return get(/databases/$(database)/documents/companies/$(cid)/employees/$(eid)).data.get('dev', null);
+        }
+        // An employee reaches their record only with the secret id inside their QR,
+        // and once a phone has claimed that QR nobody else can open it (until the admin resets it).
+        allow get: if isOwner(cid) || resource == null
+          || resource.data.get('dev', null) == null
+          || resource.data.dev == request.auth.uid;
+        allow list: if isOwner(cid);
+        allow create: if isOwner(cid);
+        allow update: if isOwner(cid)
+          || (signedIn()
+              && resource.data.get('dev', null) == null
+              && request.resource.data.dev == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dev']));
+        allow delete: if false;
+
+        // Salary slips: only the admin writes them; the employee's own phone can read them.
+        match /slips/{ym} {
+          allow get, list: if isOwner(cid) || (signedIn() && empDev() == request.auth.uid);
+          allow create, update: if isOwner(cid)
+            && request.resource.data.keys().hasOnly(['f', 'at', 'cl'])
+            && (!('cl' in request.resource.data) || request.resource.data.cl is bool)
+            && request.resource.data.f is map
+            && request.resource.data.f.size() <= 30;
+          allow delete: if false;
+        }
+
+        match /punches/{pid} {
+          function empActive() {
+            return get(/databases/$(database)/documents/companies/$(cid)/employees/$(eid)).data.status == 'active';
+          }
+          function mine() { return isOwner(cid) || (signedIn() && empDev() == request.auth.uid); }
+          allow get, list: if mine();
+          // The real punch is kept for ever. When the admin changes a time (Reports > pencil icon),
+          // the first real value is saved once in oi (Punch In) / oo (Punch Out, -1 = none) and can never change again.
+          function inKept(r, q) {
+            return ('oi' in r) ? ('oi' in q && q.oi == r.oi) : (!('oi' in q) || q.oi == r.i);
+          }
+          function outKept(r, q) {
+            return ('oo' in r) ? ('oo' in q && q.oo == r.oo) : (!('oo' in q) || q.oo == (r.o == null ? -1 : r.o));
+          }
+          allow create: if isOwner(cid)
+            && request.resource.data.keys().hasOnly(['i', 'o'])
+            && request.resource.data.i is number
+            && (request.resource.data.o == null || request.resource.data.o is number);
+          allow update: if isOwner(cid)
+            && request.resource.data.keys().hasOnly(['i', 'o', 'oi', 'oo'])
+            && request.resource.data.i is number
+            && (request.resource.data.o == null || request.resource.data.o is number)
+            && inKept(resource.data, request.resource.data)
+            && outKept(resource.data, request.resource.data)
+            && (request.resource.data.i == resource.data.i || 'oi' in request.resource.data)
+            && (request.resource.data.o == resource.data.o || 'oo' in request.resource.data);
+          allow create: if mine() && empActive()
+            && request.resource.data.keys().hasOnly(['i', 'o'])
+            && request.resource.data.i is number
+            && request.resource.data.o == null
+            && request.resource.data.i <= request.time.toMillis() + 300000
+            && request.resource.data.i >= request.time.toMillis() - 604800000;
+          allow update: if mine() && empActive()
+            && resource.data.o == null
+            && request.resource.data.keys().hasOnly(['i', 'o', 'oi', 'oo'])
+            && request.resource.data.get('oi', null) == resource.data.get('oi', null)
+            && request.resource.data.get('oo', null) == resource.data.get('oo', null)
+            && request.resource.data.i == resource.data.i
+            && request.resource.data.o is number
+            && request.resource.data.o >= resource.data.i
+            && request.resource.data.o <= request.time.toMillis() + 300000;
+          allow delete: if false;
+        }
+      }
+    }
+
+    // Feedback from admins: write-only from the app, read it in the Firebase Console.
+    match /feedback/{fid} {
+      allow create: if signedIn() && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.resource.data.keys().hasOnly(['cid', 'company', 'email', 'text', 'at'])
+        && request.resource.data.cid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 1500;
+      allow read, update, delete: if false;
+    }
+  }
+}
