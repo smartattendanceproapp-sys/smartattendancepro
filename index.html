@@ -1676,6 +1676,7 @@ VIEWS.emp=function(){
     main='<div class="body gut" style="padding-top:28px"><div class="hbox pbox"><div class="hco">'+(S.logo?logoHTML():'')+'<b>'+esc(S.company)+'</b></div>'+
      '<div class="pcard"><b>'+esc(e.name)+'</b><span>'+e.id+'</span></div></div>'+
      '<button class="prow" data-act="slip-open" style="margin-top:12px">'+ic('report',20)+'<b>Salary Slip</b></button>'+
+     '<button class="prow" data-act="share-app">'+ic('share',20)+'<b>Share App Link</b></button>'+
      '<button class="prow" data-act="not-open">'+ic('bell',20)+'<b>Notifications</b>'+(notesUnread()?'<span class="v">'+notesUnread()+' new</span>':'')+'</button>'+
      '<button class="prow" data-act="lock-open">'+ic('shield',20)+'<b>App Lock</b><span class="v">'+(lockOn()?'ON':'OFF')+'</span></button>'+
      '<button class="prow" data-act="lang-open">'+ic('globe',20)+'<b>Language</b><span class="v" data-nt>'+(LANG==='hi'?'\u0939\u093f\u0928\u094d\u0926\u0940':'English')+'</span></button>'+
@@ -1829,7 +1830,7 @@ root.addEventListener('click',function(ev){
       saveCompany();S.sv='ss';S.dirty='';msg='Salary slip settings saved';break;}
     case 'share-app':{
       var su=new URL('./',location.href).href;
-      if(navigator.share){navigator.share({title:'Smart Attendance Pro',text:'Smart Attendance Pro',url:su}).catch(function(){});return;}
+      if(navigator.share){navigator.share({url:su}).catch(function(){});return;}
       if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(su).then(function(){toast('App link copied');},function(){toast(su);});return;}
       toast(su);return;}
     case 'tp-open':openTp(b.dataset.t,b.dataset.blank==='1');return;
