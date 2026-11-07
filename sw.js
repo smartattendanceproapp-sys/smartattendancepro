@@ -1,5 +1,5 @@
 /* Service worker: network first (so updates show up), saved copy when offline. Also keeps the Firebase/QR libraries so the app can open without internet. */
-const CACHE = 'sap-v6';
+const CACHE = 'sap-v7';
 const FILES = ['./', 'index.html', 'firebase-config.js', 'manifest.json', 'privacy.html', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'splash.jpg'];
 const HOSTS = ['www.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).catch(() => {})); self.skipWaiting(); });

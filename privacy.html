@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Privacy Policy · Smart Attendance Pro</title>
-<style>body{font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans Devanagari",sans-serif;max-width:760px;margin:0 auto;padding:20px;color:#0E1A33;background:#F5F8FE}h1{font-size:24px}h2{font-size:18px;margin-top:26px;color:#1456C8}li{margin:4px 0}.hi{display:none}.lg{margin:0 0 14px}.lg a{display:inline-block;padding:6px 14px;border-radius:20px;border:1px solid #1456C8;color:#1456C8;text-decoration:none;font-size:14px;margin-right:6px}.lg a.on{background:#1456C8;color:#fff}body.h .en{display:none}body.h .hi{display:block}</style></head>
+<style>body{font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans Devanagari",sans-serif;max-width:760px;margin:0 auto;padding:20px;color:#0E1A33;background:#F5F8FE}h1{font-size:24px}h2{font-size:18px;margin-top:26px;color:#1456C8}li{margin:4px 0}.hi{display:none}.hi2{display:none}body.h .hi2{display:inline}body.h .en2{display:none}.lg{margin:0 0 14px}.lg a{display:inline-block;padding:6px 14px;border-radius:20px;border:1px solid #1456C8;color:#1456C8;text-decoration:none;font-size:14px;margin-right:6px}.lg a.on{background:#1456C8;color:#fff}body.h .en{display:none}body.h .hi{display:block}</style></head>
 <body>
-<p class="lg"><a id="le" href="?lang=en">English</a><a id="lh" href="?lang=hi">हिन्दी</a></p>
+<p class="lg"><a id="bk" href="#" class="on">← <span class="en2">Back</span><span class="hi2">वापस</span></a><span id="tg"><a id="le" href="?lang=en">English</a><a id="lh" href="?lang=hi">हिन्दी</a></span></p>
 
 <div class="en">
 <h1>Smart Attendance Pro – Privacy Policy</h1>
@@ -81,6 +81,8 @@
 (function(){var q=/[?&]lang=(hi|en)/.exec(location.search),l=q?q[1]:null;
 try{if(!l)l=localStorage.getItem('sap-lang');}catch(e){}
 var h=l==='hi';if(h){document.body.className='h';document.documentElement.lang='hi';}
-document.getElementById(h?'lh':'le').className='on';})();
+document.getElementById(h?'lh':'le').className='on';
+if(q)document.getElementById('tg').style.display='none';
+document.getElementById('bk').addEventListener('click',function(e){e.preventDefault();if(history.length>1)history.back();else location.href='./';});})();
 </script>
 </body></html>
