@@ -1,5 +1,5 @@
 /* Service worker: network first (so updates show up), saved copy when offline. Also keeps the Firebase/QR libraries so the app can open without internet. */
-const CACHE = 'sap-v13';
+const CACHE = 'sap-v14';
 const FILES = ['./', 'index.html', 'firebase-config.js', 'manifest.json', 'privacy.html', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'splash.jpg'];
 const HOSTS = ['www.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).catch(() => {})); self.skipWaiting(); });
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
     /* the app itself: newest copy when the network answers quickly, otherwise the saved copy */
     e.respondWith(new Promise(res => {
       let done = false; const t = setTimeout(() => caches.match(e.request).then(m => { if (m && !done) { done = true; res(m); } }), 2500);
-      fetch(e.request).then(r => { clearTimeout(t); if (!done) { done = true; res(save(r)); } else save(r); })
+      fetch(u.href, { cache: 'no-cache' }).then(r => { clearTimeout(t); if (!done) { done = true; res(save(r)); } else save(r); })
         .catch(() => { clearTimeout(t); caches.match(e.request).then(m => { if (!done) { done = true; res(m || Response.error()); } }); });
     }));
   }
